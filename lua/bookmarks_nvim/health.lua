@@ -25,7 +25,9 @@ function M.check()
     if ok then
       vim.health.ok("Telescope is available")
     else
-      vim.health.warn("Picker backend is 'telescope' but telescope.nvim is not installed. Will fall back to builtin picker.")
+      vim.health.warn(
+        "Picker backend is 'telescope' but telescope.nvim is not installed. Will fall back to builtin picker."
+      )
     end
   else
     vim.health.ok("Using builtin picker (no external dependencies)")

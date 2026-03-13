@@ -90,15 +90,15 @@ require("bookmarks_nvim").setup({
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `:BookmarksNvimMark` | Create bookmark or rename existing one at cursor |
-| `:BookmarksNvimDelete` | Delete bookmark at cursor line |
-| `:BookmarksNvimList` | Open picker with project bookmarks |
-| `:BookmarksNvimNext` | Jump to next bookmark in current file |
-| `:BookmarksNvimPrev` | Jump to previous bookmark in current file |
-| `:BookmarksNvimListAll` | Open picker with bookmarks from ALL projects |
-| `:BookmarksNvimDeleteAll` | Delete all bookmarks in current project |
+| Command                   | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `:BookmarksNvimMark`      | Create bookmark or rename existing one at cursor |
+| `:BookmarksNvimDelete`    | Delete bookmark at cursor line                   |
+| `:BookmarksNvimList`      | Open picker with project bookmarks               |
+| `:BookmarksNvimNext`      | Jump to next bookmark in current file            |
+| `:BookmarksNvimPrev`      | Jump to previous bookmark in current file        |
+| `:BookmarksNvimListAll`   | Open picker with bookmarks from ALL projects     |
+| `:BookmarksNvimDeleteAll` | Delete all bookmarks in current project          |
 
 ## Development
 
