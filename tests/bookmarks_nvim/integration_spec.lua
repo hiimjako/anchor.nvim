@@ -588,6 +588,81 @@ describe("core operations", function()
     end)
   end)
 
+  describe("bookmark reordering", function()
+    local function add_bookmark(api, line, name)
+      vim.api.nvim_win_set_cursor(0, { line, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm(name)
+      end
+      api.mark()
+      vim.ui.input = original_input
+    end
+
+    local function feed(keystr)
+      local keys = vim.api.nvim_replace_termcodes("i" .. keystr, true, false, true)
+      vim.api.nvim_feedkeys(keys, "x", false)
+    end
+
+    it("C-j moves the selected bookmark down and persists the order", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 1, "first")
+      add_bookmark(api, 2, "second")
+      add_bookmark(api, 3, "third")
+
+      api.list_bookmarks()
+      feed("<C-j><Esc>")
+
+      local bookmarks = store.load(proj_root)
+      assert.equals("second", bookmarks[1].name)
+      assert.equals("first", bookmarks[2].name)
+      assert.equals("third", bookmarks[3].name)
+    end)
+
+    it("C-k moves the selected bookmark up and persists the order", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 1, "first")
+      add_bookmark(api, 2, "second")
+      add_bookmark(api, 3, "third")
+
+      api.list_bookmarks()
+      -- Move down to "second", then move it up
+      feed("<C-n><C-k><Esc>")
+
+      local bookmarks = store.load(proj_root)
+      assert.equals("second", bookmarks[1].name)
+      assert.equals("first", bookmarks[2].name)
+      assert.equals("third", bookmarks[3].name)
+    end)
+
+    it("C-j does nothing when the last bookmark is selected", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 1, "first")
+      add_bookmark(api, 2, "second")
+
+      api.list_bookmarks()
+      -- Move to last item, try to move down
+      feed("<C-n><C-j><Esc>")
+
+      local bookmarks = store.load(proj_root)
+      assert.equals("first", bookmarks[1].name)
+      assert.equals("second", bookmarks[2].name)
+    end)
+
+    it("C-k does nothing when the first bookmark is selected", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 1, "first")
+      add_bookmark(api, 2, "second")
+
+      api.list_bookmarks()
+      feed("<C-k><Esc>")
+
+      local bookmarks = store.load(proj_root)
+      assert.equals("first", bookmarks[1].name)
+      assert.equals("second", bookmarks[2].name)
+    end)
+  end)
+
   describe("statusline", function()
     it("returns empty string when no bookmarks in current project", function()
       local api = require("bookmarks_nvim")

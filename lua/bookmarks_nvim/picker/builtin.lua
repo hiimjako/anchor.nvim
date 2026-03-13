@@ -201,6 +201,53 @@ function M.pick(bookmarks, opts, on_select)
     delete_current()
   end, keymap_opts)
 
+  local function move_bookmark(direction)
+    if #filtered == 0 or selected_idx > #filtered then
+      return
+    end
+    local target_idx = selected_idx + direction
+    if target_idx < 1 or target_idx > #filtered then
+      return
+    end
+
+    local bm_a = filtered[selected_idx]
+    local bm_b = filtered[target_idx]
+
+    -- Swap in source bookmarks list
+    local src_a, src_b
+    for i, bm in ipairs(bookmarks) do
+      if bm.id == bm_a.id then
+        src_a = i
+      end
+      if bm.id == bm_b.id then
+        src_b = i
+      end
+    end
+    if src_a and src_b then
+      bookmarks[src_a], bookmarks[src_b] = bookmarks[src_b], bookmarks[src_a]
+    end
+
+    -- Re-derive filtered from bookmarks
+    local query_lines = vim.api.nvim_buf_get_lines(prompt_buf, 0, -1, false)
+    local query = M.extract_query(query_lines[1])
+    filtered = M.filter_bookmarks(bookmarks, query)
+
+    selected_idx = target_idx
+    render()
+
+    if opts.on_reorder then
+      opts.on_reorder(bookmarks)
+    end
+  end
+
+  vim.keymap.set("i", "<C-j>", function()
+    move_bookmark(1)
+  end, keymap_opts)
+
+  vim.keymap.set("i", "<C-k>", function()
+    move_bookmark(-1)
+  end, keymap_opts)
+
   -- Filter on every keystroke
   vim.api.nvim_buf_attach(prompt_buf, false, {
     on_lines = function()

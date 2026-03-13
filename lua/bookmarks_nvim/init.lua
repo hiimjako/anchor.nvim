@@ -211,6 +211,9 @@ function M.list_bookmarks()
       end
       store.save(root, current)
     end,
+    on_reorder = function(reordered)
+      store.save(root, reordered)
+    end,
     reload = function()
       local current = store.load(root)
       for _, bm in ipairs(current) do

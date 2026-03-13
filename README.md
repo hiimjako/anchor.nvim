@@ -111,6 +111,7 @@ require("anchor_nvim").setup({
 - `<Esc>` close the picker
 - `<C-n>` / `<C-p>` move selection
 - `<C-d>` delete the selected anchor
+- `<C-j>` / `<C-k>` reorder the selected bookmark (persisted)
 
 ## which-key Integration
 
