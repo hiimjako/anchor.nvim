@@ -39,10 +39,10 @@ describe("picker filtering", function()
     assert.equals(3, #results)
   end)
 
-  it("extract_query returns empty string for a fresh prompt line", function()
-    assert.equals("", builtin.extract_query("> "))
-    assert.equals("hello", builtin.extract_query("> hello"))
+  it("extract_query returns the line content as the query", function()
     assert.equals("", builtin.extract_query(""))
+    assert.equals("hello", builtin.extract_query("hello"))
+    assert.equals("", builtin.extract_query(nil))
   end)
 
   it("returns empty list when nothing matches", function()
@@ -76,5 +76,86 @@ describe("picker filtering", function()
     local results = builtin.filter_bookmarks(bookmarks, "my-app")
     assert.equals(1, #results)
     assert.equals("todo fix", results[1].name)
+  end)
+end)
+
+describe("picker navigation", function()
+  local bookmarks
+
+  before_each(function()
+    local config = require("bookmarks_nvim.config")
+    config.reset()
+    config.setup({ keymaps = false })
+    bookmarks = {
+      Bookmark.new("first", "a.lua", 1, 0, "aaa"),
+      Bookmark.new("second", "b.lua", 2, 0, "bbb"),
+      Bookmark.new("third", "c.lua", 3, 0, "ccc"),
+    }
+  end)
+
+  local function feed(keystr)
+    -- "i" enters insert mode (startinsert is deferred in tests),
+    -- then the rest runs against our buffer-local insert-mode maps.
+    local keys = vim.api.nvim_replace_termcodes("i" .. keystr, true, false, true)
+    vim.api.nvim_feedkeys(keys, "x", false)
+  end
+
+  it("Down arrow selects the next bookmark", function()
+    local selected = nil
+    builtin.pick(bookmarks, {}, function(bm)
+      selected = bm
+    end)
+
+    feed("<Down><CR>")
+
+    assert.is_not_nil(selected)
+    assert.equals("second", selected.name)
+  end)
+
+  it("Up arrow after Down returns to first bookmark", function()
+    local selected = nil
+    builtin.pick(bookmarks, {}, function(bm)
+      selected = bm
+    end)
+
+    feed("<Down><Up><CR>")
+
+    assert.is_not_nil(selected)
+    assert.equals("first", selected.name)
+  end)
+
+  it("selected line has a visible highlight that moves with arrows", function()
+    local ns = vim.api.nvim_create_namespace("BookmarksNvimPicker")
+
+    builtin.pick(bookmarks, {}, function() end)
+
+    -- Find the results buffer
+    local results_buf = nil
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(buf) then
+        local lines = vim.api.nvim_buf_get_lines(buf, 0, 1, false)
+        if lines[1] and lines[1]:find("first") then
+          results_buf = buf
+          break
+        end
+      end
+    end
+    assert.is_not_nil(results_buf)
+
+    -- Initial state: first line (index 0) should have the highlight
+    local marks = vim.api.nvim_buf_get_extmarks(results_buf, ns, 0, -1, { details = true })
+    assert.equals(1, #marks)
+    assert.equals(0, marks[1][2]) -- line 0 highlighted
+    assert.equals("BookmarksNvimPickerSel", marks[1][4].hl_group)
+
+    -- Press Down: highlight should move to line 1 (picker stays open)
+    feed("<Down>")
+    marks = vim.api.nvim_buf_get_extmarks(results_buf, ns, 0, -1, { details = true })
+    assert.equals(1, #marks)
+    assert.equals(1, marks[1][2]) -- line 1 highlighted
+
+    -- Clean up: close the picker
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+    vim.api.nvim_feedkeys(esc, "x", false)
   end)
 end)

@@ -213,7 +213,9 @@ function M.list_bookmarks()
     end,
   }, function(selected)
     local target = root .. "/" .. selected.file
-    vim.cmd("edit " .. vim.fn.fnameescape(target))
+    if vim.api.nvim_buf_get_name(0) ~= target then
+      vim.cmd("drop " .. vim.fn.fnameescape(target))
+    end
     vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
   end)
 end
@@ -244,7 +246,9 @@ function M.list_all_bookmarks()
     end,
   }, function(selected)
     local target = (selected._project_root or "") .. "/" .. selected.file
-    vim.cmd("edit " .. vim.fn.fnameescape(target))
+    if vim.api.nvim_buf_get_name(0) ~= target then
+      vim.cmd("drop " .. vim.fn.fnameescape(target))
+    end
     vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
   end)
 end

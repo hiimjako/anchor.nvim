@@ -352,6 +352,36 @@ describe("core operations", function()
     end)
   end)
 
+  describe("list_bookmarks", function()
+    it("selecting a bookmark works when buffer has unsaved changes", function()
+      local api = require("bookmarks_nvim")
+
+      -- Add a bookmark on line 3
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("my mark")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Move cursor away from bookmarked line
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+      -- Make the buffer dirty (unsaved changes)
+      vim.api.nvim_buf_set_lines(0, 0, 1, false, { "local changed = true" })
+      assert.is_true(vim.bo.modified)
+
+      -- Open the list picker and select the bookmark
+      api.list_bookmarks()
+      local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
+      vim.api.nvim_feedkeys(keys, "x", false)
+
+      -- Should jump to the bookmarked line without error
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+  end)
+
   describe("statusline", function()
     it("returns empty string when no bookmarks in current project", function()
       local api = require("bookmarks_nvim")

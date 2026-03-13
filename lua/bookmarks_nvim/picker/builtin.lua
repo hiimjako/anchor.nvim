@@ -23,7 +23,7 @@ function M.filter_bookmarks(bookmarks, query)
 end
 
 function M.extract_query(line)
-  return (line or ""):gsub("^> ", "")
+  return line or ""
 end
 
 function M.format_entry(bookmark)
@@ -47,6 +47,8 @@ function M.pick(bookmarks, opts, on_select)
   local config = require("bookmarks_nvim.config").get()
   local picker_config = config.picker
 
+  vim.api.nvim_set_hl(0, "BookmarksNvimPickerSel", { link = "Visual", default = true })
+
   local width_ratio = picker_config.width_ratio or 0.6
   local height_ratio = picker_config.height_ratio or 0.5
 
@@ -62,11 +64,10 @@ function M.pick(bookmarks, opts, on_select)
   local results_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[results_buf].bufhidden = "wipe"
 
-  -- Create prompt buffer
+  -- Create prompt buffer (regular scratch buffer so arrow keys work)
   local prompt_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[prompt_buf].bufhidden = "wipe"
-  vim.bo[prompt_buf].buftype = "prompt"
-  vim.fn.prompt_setprompt(prompt_buf, "> ")
+  vim.bo[prompt_buf].buftype = "nofile"
 
   -- Open results window
   local results_win = vim.api.nvim_open_win(results_buf, false, {
@@ -109,7 +110,12 @@ function M.pick(bookmarks, opts, on_select)
     -- Highlight selected line
     vim.api.nvim_buf_clear_namespace(results_buf, ns, 0, -1)
     if #filtered > 0 and selected_idx <= #filtered then
-      vim.api.nvim_buf_add_highlight(results_buf, ns, "CursorLine", selected_idx - 1, 0, -1)
+      vim.api.nvim_buf_set_extmark(results_buf, ns, selected_idx - 1, 0, {
+        end_col = 0,
+        end_row = selected_idx,
+        hl_group = "BookmarksNvimPickerSel",
+        hl_eol = true,
+      })
     end
   end
 
