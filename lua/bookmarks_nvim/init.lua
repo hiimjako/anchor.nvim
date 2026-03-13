@@ -284,6 +284,38 @@ function M.delete_all()
   end)
 end
 
+function M.quickfix_list()
+  local store = require("bookmarks_nvim.store")
+
+  local root = get_project_root()
+  local bookmarks = store.load(root)
+
+  if #bookmarks == 0 then
+    return
+  end
+
+  -- Sort by file, then line
+  table.sort(bookmarks, function(a, b)
+    if a.file ~= b.file then
+      return a.file < b.file
+    end
+    return a.line < b.line
+  end)
+
+  local items = {}
+  for _, bm in ipairs(bookmarks) do
+    table.insert(items, {
+      filename = root .. "/" .. bm.file,
+      lnum = bm.line,
+      col = (bm.col or 0) + 1,
+      text = bm.name,
+    })
+  end
+
+  vim.fn.setqflist(items, "r")
+  vim.cmd("copen")
+end
+
 function M.statusline()
   local store = require("bookmarks_nvim.store")
   local project = require("bookmarks_nvim.project")

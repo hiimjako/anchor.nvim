@@ -34,3 +34,7 @@ end)
 cmd("BookmarksNvimListAll", function()
   require("bookmarks_nvim").list_all_bookmarks()
 end)
+
+cmd("BookmarksNvimToQflist", function()
+  require("bookmarks_nvim").quickfix_list()
+end)

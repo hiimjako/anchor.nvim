@@ -501,6 +501,93 @@ describe("core operations", function()
     end)
   end)
 
+  describe("quickfix_list", function()
+    local function add_bookmark(api, line, name)
+      vim.api.nvim_win_set_cursor(0, { line, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm(name)
+      end
+      api.mark()
+      vim.ui.input = original_input
+    end
+
+    it("populates quickfix list with current project bookmarks", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 2, "second line")
+      add_bookmark(api, 4, "fourth line")
+
+      api.quickfix_list()
+
+      local qflist = vim.fn.getqflist()
+      assert.equals(2, #qflist)
+      assert.equals(2, qflist[1].lnum)
+      assert.equals(4, qflist[2].lnum)
+    end)
+
+    it("includes bookmark name in quickfix text", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 3, "important spot")
+
+      api.quickfix_list()
+
+      local qflist = vim.fn.getqflist()
+      assert.equals(1, #qflist)
+      assert.truthy(qflist[1].text:find("important spot"))
+    end)
+
+    it("sets correct filename in quickfix entries", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 1, "top")
+
+      api.quickfix_list()
+
+      local qflist = vim.fn.getqflist()
+      local bufname = vim.fn.bufname(qflist[1].bufnr)
+      assert.truthy(bufname:find("src/main.lua"))
+    end)
+
+    it("does nothing when there are no bookmarks", function()
+      local api = require("bookmarks_nvim")
+
+      -- Clear quickfix first
+      vim.fn.setqflist({})
+
+      api.quickfix_list()
+
+      local qflist = vim.fn.getqflist()
+      assert.equals(0, #qflist)
+    end)
+
+    it("sorts entries by file then line number", function()
+      local api = require("bookmarks_nvim")
+
+      -- Create a second file
+      local second_file = proj_root .. "/src/other.lua"
+      local f = io.open(second_file, "w")
+      f:write("local x = 1\nlocal y = 2\nlocal z = 3\n")
+      f:close()
+
+      -- Bookmark in second file first
+      vim.cmd("edit " .. second_file)
+      add_bookmark(api, 2, "other mark")
+
+      -- Bookmark in main file
+      vim.cmd("edit " .. proj_root .. "/src/main.lua")
+      add_bookmark(api, 4, "main mark 4")
+      add_bookmark(api, 1, "main mark 1")
+
+      api.quickfix_list()
+
+      local qflist = vim.fn.getqflist()
+      assert.equals(3, #qflist)
+      -- Should be sorted by file, then by line
+      assert.equals(1, qflist[1].lnum)
+      assert.equals(4, qflist[2].lnum)
+      assert.equals(2, qflist[3].lnum)
+    end)
+  end)
+
   describe("statusline", function()
     it("returns empty string when no bookmarks in current project", function()
       local api = require("bookmarks_nvim")
