@@ -96,6 +96,14 @@ function M.pick(bookmarks, opts, on_select)
   })
 
   local ns = vim.api.nvim_create_namespace("BookmarksNvimPicker")
+
+  -- Show a "> " prompt prefix via inline virtual text
+  local prompt_ns = vim.api.nvim_create_namespace("BookmarksNvimPrompt")
+  vim.api.nvim_buf_set_extmark(prompt_buf, prompt_ns, 0, 0, {
+    virt_text = { { "> ", "Comment" } },
+    virt_text_pos = "inline",
+  })
+
   local selected_idx = 1
   local filtered = bookmarks
   local entry_formatter = opts.format_entry or M.format_entry
