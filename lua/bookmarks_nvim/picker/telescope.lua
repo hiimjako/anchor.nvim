@@ -8,23 +8,30 @@ function M.pick(bookmarks, opts, on_select)
   local action_state = require("telescope.actions.state")
 
   local builtin = require("bookmarks_nvim.picker.builtin")
+  local formatter = (opts and opts.format_entry) or builtin.format_entry
+
+  local function make_entry(bm)
+    local display = formatter(bm)
+    local ordinal = bm.name .. " " .. bm.file .. " " .. (bm.content or "")
+    if bm._project_root then
+      ordinal = ordinal .. " " .. bm._project_root
+    end
+    return {
+      value = bm,
+      display = display,
+      ordinal = ordinal,
+      filename = bm._abs_path,
+      lnum = bm.line,
+      col = bm.col,
+    }
+  end
 
   pickers
     .new({}, {
       prompt_title = "Bookmarks",
       finder = finders.new_table({
         results = bookmarks,
-        entry_maker = function(bm)
-          local display = builtin.format_entry(bm)
-          return {
-            value = bm,
-            display = display,
-            ordinal = bm.name .. " " .. bm.file .. " " .. (bm.content or ""),
-            filename = bm._abs_path,
-            lnum = bm.line,
-            col = bm.col,
-          }
-        end,
+        entry_maker = make_entry,
       }),
       sorter = conf.generic_sorter({}),
       previewer = conf.grep_previewer({}),
@@ -47,14 +54,7 @@ function M.pick(bookmarks, opts, on_select)
             current_picker:refresh(
               finders.new_table({
                 results = new_bookmarks,
-                entry_maker = function(bm)
-                  local display = builtin.format_entry(bm)
-                  return {
-                    value = bm,
-                    display = display,
-                    ordinal = bm.name .. " " .. bm.file .. " " .. (bm.content or ""),
-                  }
-                end,
+                entry_maker = make_entry,
               }),
               { reset_prompt = false }
             )
