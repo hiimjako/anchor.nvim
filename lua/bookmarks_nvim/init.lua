@@ -87,4 +87,72 @@ function M.delete_mark()
   store.save(root, bookmarks)
 end
 
+function M.next_bookmark()
+  local config = require("bookmarks_nvim.config")
+  local store = require("bookmarks_nvim.store")
+
+  local root = get_project_root()
+  local rel_file = get_relative_path(root)
+  local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+
+  local bookmarks = store.load(root)
+  local file_lines = {}
+  for _, bm in ipairs(bookmarks) do
+    if bm.file == rel_file then
+      table.insert(file_lines, bm.line)
+    end
+  end
+
+  if #file_lines == 0 then
+    return
+  end
+
+  table.sort(file_lines)
+
+  for _, line in ipairs(file_lines) do
+    if line > cursor_line then
+      vim.api.nvim_win_set_cursor(0, { line, 0 })
+      return
+    end
+  end
+
+  if config.get().navigation.wrap then
+    vim.api.nvim_win_set_cursor(0, { file_lines[1], 0 })
+  end
+end
+
+function M.prev_bookmark()
+  local config = require("bookmarks_nvim.config")
+  local store = require("bookmarks_nvim.store")
+
+  local root = get_project_root()
+  local rel_file = get_relative_path(root)
+  local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+
+  local bookmarks = store.load(root)
+  local file_lines = {}
+  for _, bm in ipairs(bookmarks) do
+    if bm.file == rel_file then
+      table.insert(file_lines, bm.line)
+    end
+  end
+
+  if #file_lines == 0 then
+    return
+  end
+
+  table.sort(file_lines)
+
+  for i = #file_lines, 1, -1 do
+    if file_lines[i] < cursor_line then
+      vim.api.nvim_win_set_cursor(0, { file_lines[i], 0 })
+      return
+    end
+  end
+
+  if config.get().navigation.wrap then
+    vim.api.nvim_win_set_cursor(0, { file_lines[#file_lines], 0 })
+  end
+end
+
 return M

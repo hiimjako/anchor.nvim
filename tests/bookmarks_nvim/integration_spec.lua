@@ -194,4 +194,87 @@ describe("core operations", function()
       assert.equals(1, #store.load(proj_root))
     end)
   end)
+
+  describe("navigation", function()
+    local function add_bookmark(api, line, name)
+      vim.api.nvim_win_set_cursor(0, { line, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm(name)
+      end
+      api.mark()
+      vim.ui.input = original_input
+    end
+
+    it("next_bookmark moves cursor to the next bookmarked line", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 2, "b")
+      add_bookmark(api, 4, "d")
+
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.next_bookmark()
+      assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
+
+      api.next_bookmark()
+      assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("prev_bookmark moves cursor to the previous bookmarked line", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 2, "b")
+      add_bookmark(api, 4, "d")
+
+      vim.api.nvim_win_set_cursor(0, { 5, 0 })
+      api.prev_bookmark()
+      assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
+
+      api.prev_bookmark()
+      assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("next_bookmark wraps around when wrap is enabled", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 2, "b")
+      add_bookmark(api, 4, "d")
+
+      vim.api.nvim_win_set_cursor(0, { 4, 0 })
+      api.next_bookmark()
+      assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("prev_bookmark wraps around when wrap is enabled", function()
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 2, "b")
+      add_bookmark(api, 4, "d")
+
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+      api.prev_bookmark()
+      assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("next_bookmark does nothing when no bookmarks exist", function()
+      local api = require("bookmarks_nvim")
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      api.next_bookmark()
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("prev_bookmark does nothing when no bookmarks exist", function()
+      local api = require("bookmarks_nvim")
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      api.prev_bookmark()
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("next_bookmark does not wrap when wrap is disabled", function()
+      config.setup({ data_dir = data_dir, keymaps = false, navigation = { wrap = false } })
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 2, "b")
+
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+      api.next_bookmark()
+      -- stays on same line, no wrap
+      assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+  end)
 end)
