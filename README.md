@@ -9,6 +9,7 @@ Project-scoped bookmarks for Neovim. Each project sees only its own bookmarks.
 - Optional Telescope integration
 - Gutter signs + virtual text on bookmarked lines
 - Next/previous navigation within files
+- Global bookmark search across all projects
 - JSON storage — one file per project, easy to inspect
 
 ## Installation
@@ -81,6 +82,7 @@ require("bookmarks_nvim").setup({
     next       = "<leader>bn",  -- next bookmark in file
     prev       = "<leader>bp",  -- prev bookmark in file
     delete_all = "<leader>bx",  -- delete all project bookmarks
+    list_all   = "<leader>ba",  -- search bookmarks across ALL projects
   },
   -- keymaps = false,           -- disable all default keymaps
 })
@@ -95,6 +97,7 @@ require("bookmarks_nvim").setup({
 | `:BookmarksNvimList` | Open picker with project bookmarks |
 | `:BookmarksNvimNext` | Jump to next bookmark in current file |
 | `:BookmarksNvimPrev` | Jump to previous bookmark in current file |
+| `:BookmarksNvimListAll` | Open picker with bookmarks from ALL projects |
 | `:BookmarksNvimDeleteAll` | Delete all bookmarks in current project |
 
 ## Development
