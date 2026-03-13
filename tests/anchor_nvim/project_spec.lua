@@ -49,6 +49,27 @@ describe("project detection", function()
     assert.is_nil(root)
   end)
 
+  it("caches negative lookups so repeated calls for non-project paths avoid filesystem walks", function()
+    local deep = tmpdir .. "/no/project/here"
+    vim.fn.mkdir(deep, "p")
+
+    -- First lookup returns nil
+    local root1 = project.find_root(deep)
+    assert.is_nil(root1)
+
+    -- Now add a root marker after the lookup
+    vim.fn.mkdir(deep .. "/.git", "p")
+
+    -- Second lookup should still return nil (cached negative result)
+    local root2 = project.find_root(deep)
+    assert.is_nil(root2)
+
+    -- After clearing cache, it should find the new marker
+    project.clear_cache()
+    local root3 = project.find_root(deep)
+    assert.equals(deep, root3)
+  end)
+
   it("generates a stable project ID from a project root path", function()
     local id1 = project.project_id("/Users/jako/myproject")
     local id2 = project.project_id("/Users/jako/myproject")

@@ -5,8 +5,8 @@ local M = {}
 local cache = {}
 
 function M.find_root(start_path)
-  if cache[start_path] then
-    return cache[start_path]
+  if cache[start_path] ~= nil then
+    return cache[start_path] or nil
   end
 
   local cfg = config.get()
@@ -29,6 +29,7 @@ function M.find_root(start_path)
     dir = parent
   end
 
+  cache[start_path] = false
   return nil
 end
 
