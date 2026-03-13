@@ -8,16 +8,18 @@ A Neovim plugin for managing project-scoped bookmarks. Bookmarks are automatical
 
 ```
 lua/bookmarks_nvim/
-  init.lua          -- Public API: setup(), mark() (upsert), delete_mark(), list_bookmarks(), next/prev
+  init.lua          -- Public API: setup(), mark(), delete_mark(), list_bookmarks(), list_all_bookmarks(), next/prev, delete_all(), statusline()
   config.lua        -- Default config + merge logic
   project.lua       -- Project root detection + project ID generation
   bookmark.lua      -- Bookmark data model constructors + helpers
   store.lua         -- JSON persistence (one file per project)
   sign.lua          -- Gutter signs + virtual text via extmarks
+  calibrate.lua     -- Line drift detection via content matching
   autocmd.lua       -- BufEnter/TextChanged sign refresh
+  health.lua        -- :checkhealth integration
   picker/
     init.lua        -- Dispatcher (builtin vs telescope)
-    builtin.lua     -- Zero-dep floating window picker with fuzzy filter
+    builtin.lua     -- Zero-dep floating window picker with substring filter
     telescope.lua   -- Optional telescope adapter
 plugin/
   bookmarks_nvim.lua -- Command registration, load guard
@@ -57,7 +59,7 @@ Requires `plenary.nvim` cloned at `../plenary.nvim` (sibling directory).
 - **Storage**: JSON files per project at `stdpath("cache")/bookmarks_nvim/<project_id>.json`. Zero external dependencies.
 - **Project scoping**: Walk up from buffer directory looking for root markers. Cache per session. Fallback to `cwd`.
 - **Picker**: Built-in floating window (zero deps) + optional Telescope. Falls back to builtin if telescope not available.
-- **No default keymaps**: User sets their own via lazy.nvim `keys` or manual `vim.keymap.set`.
+- **Default keymaps**: Sensible defaults provided (`<leader>b*`). Can be disabled entirely with `keymaps = false` or individually with `keymaps = { delete = false }`.
 - **Lazy loading**: `plugin/` registers commands, `setup()` is called by user. No side effects on `require()`.
 
 ## Formatting
