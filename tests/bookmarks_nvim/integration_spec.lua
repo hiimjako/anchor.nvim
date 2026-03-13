@@ -379,6 +379,31 @@ describe("core operations", function()
 
       -- Should jump to the bookmarked line without error
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+      -- Should return to normal mode, not leave user in insert mode
+      assert.equals("n", vim.fn.mode())
+    end)
+
+    it("returns to normal mode after selecting a bookmark", function()
+      local api = require("bookmarks_nvim")
+      local builtin = require("bookmarks_nvim.picker.builtin")
+
+      -- Add a bookmark
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("test mark")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Open picker (enters insert mode internally)
+      api.list_bookmarks()
+      -- Simulate: enter insert mode then press CR to select
+      local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
+      vim.api.nvim_feedkeys(keys, "x", false)
+
+      -- Must be back in normal mode
+      assert.equals("n", vim.fn.mode())
     end)
   end)
 

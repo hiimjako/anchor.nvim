@@ -112,6 +112,14 @@ describe("picker navigation", function()
     assert.equals("second", selected.name)
   end)
 
+  it("closing the picker restores normal mode", function()
+    builtin.pick(bookmarks, {}, function() end)
+
+    feed("<CR>")
+
+    assert.equals("n", vim.fn.mode())
+  end)
+
   it("Up arrow after Down returns to first bookmark", function()
     local selected = nil
     builtin.pick(bookmarks, {}, function(bm)

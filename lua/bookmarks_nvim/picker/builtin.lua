@@ -120,6 +120,7 @@ function M.pick(bookmarks, opts, on_select)
   end
 
   local function close()
+    vim.cmd("stopinsert")
     if vim.api.nvim_win_is_valid(prompt_win) then
       vim.api.nvim_win_close(prompt_win, true)
     end
