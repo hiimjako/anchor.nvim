@@ -19,6 +19,8 @@ describe("core operations", function()
       keymaps = false,
     })
 
+    require("bookmarks_nvim.sign").setup()
+
     -- Create a test file and open it
     local test_file = proj_root .. "/src/main.lua"
     local f = io.open(test_file, "w")
