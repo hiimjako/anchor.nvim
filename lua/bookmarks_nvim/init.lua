@@ -155,4 +155,38 @@ function M.prev_bookmark()
   end
 end
 
+function M.list_bookmarks()
+  local store = require("bookmarks_nvim.store")
+  local picker = require("bookmarks_nvim.picker")
+
+  local root = get_project_root()
+  local bookmarks = store.load(root)
+
+  picker.pick(bookmarks, {
+    on_delete = function(bm)
+      local current = store.load(root)
+      for i, b in ipairs(current) do
+        if b.id == bm.id then
+          table.remove(current, i)
+          break
+        end
+      end
+      store.save(root, current)
+    end,
+    reload = function()
+      return store.load(root)
+    end,
+  }, function(selected)
+    local target = root .. "/" .. selected.file
+    vim.cmd("edit " .. vim.fn.fnameescape(target))
+    vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
+  end)
+end
+
+function M.delete_all()
+  local store = require("bookmarks_nvim.store")
+  local root = get_project_root()
+  store.save(root, {})
+end
+
 return M
