@@ -2,7 +2,7 @@ local M = {}
 
 local defaults = {
   root_markers = { ".git", ".hg", ".svn", "Makefile", "package.json", "Cargo.toml" },
-  data_dir = vim.fn.stdpath("cache") .. "/bookmarks_nvim",
+  data_dir = vim.fn.stdpath("cache") .. "/anchor_nvim",
   signs = {
     icon = "󰃁",
     color = "#e06c75",
@@ -20,13 +20,13 @@ local defaults = {
     wrap = true,
   },
   keymaps = {
-    mark = "<leader>bm",
-    delete = "<leader>bd",
-    list = "<leader>bl",
-    next = "<leader>bn",
-    prev = "<leader>bp",
-    delete_all = "<leader>bx",
-    list_all = "<leader>ba",
+    mark = "<leader>mm",
+    delete = "<leader>md",
+    list = "<leader>ml",
+    next = "<leader>mn",
+    prev = "<leader>mp",
+    delete_all = "<leader>mx",
+    list_all = "<leader>ma",
   },
 }
 

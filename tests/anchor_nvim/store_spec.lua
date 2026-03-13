@@ -1,6 +1,6 @@
-local store = require("bookmarks_nvim.store")
-local config = require("bookmarks_nvim.config")
-local Bookmark = require("bookmarks_nvim.bookmark")
+local store = require("anchor_nvim.store")
+local config = require("anchor_nvim.config")
+local Anchor = require("anchor_nvim.anchor")
 
 describe("store", function()
   local tmpdir
@@ -16,13 +16,13 @@ describe("store", function()
     vim.fn.delete(tmpdir, "rf")
   end)
 
-  it("returns empty list when no bookmark file exists for a project", function()
-    local bookmarks = store.load("/some/nonexistent/project")
-    assert.same({}, bookmarks)
+  it("returns empty list when no anchor file exists for a project", function()
+    local anchors = store.load("/some/nonexistent/project")
+    assert.same({}, anchors)
   end)
 
-  it("saves bookmarks and loads them back with all fields intact", function()
-    local bm = Bookmark.new("my mark", "src/main.lua", 10, 5, "  local x = 1")
+  it("saves anchors and loads them back with all fields intact", function()
+    local bm = Anchor.new("my mark", "src/main.lua", 10, 5, "  local x = 1")
     store.save("/my/project", { bm })
 
     local loaded = store.load("/my/project")
@@ -41,7 +41,7 @@ describe("store", function()
     local nested = tmpdir .. "/deep/nested/dir"
     config.setup({ data_dir = nested })
 
-    local bm = Bookmark.new("test", "f.lua", 1, 0, "x")
+    local bm = Anchor.new("test", "f.lua", 1, 0, "x")
     store.save("/proj", { bm })
 
     assert.equals(1, vim.fn.isdirectory(nested))
@@ -63,8 +63,8 @@ describe("store", function()
   end)
 
   it("different project roots store to different files", function()
-    local bm1 = Bookmark.new("proj1 mark", "a.lua", 1, 0, "a")
-    local bm2 = Bookmark.new("proj2 mark", "b.lua", 2, 0, "b")
+    local bm1 = Anchor.new("proj1 mark", "a.lua", 1, 0, "a")
+    local bm2 = Anchor.new("proj2 mark", "b.lua", 2, 0, "b")
 
     store.save("/project/one", { bm1 })
     store.save("/project/two", { bm2 })
@@ -79,9 +79,9 @@ describe("store", function()
   end)
 
   describe("load_all", function()
-    it("returns bookmarks from multiple projects with project_root attached", function()
-      local bm1 = Bookmark.new("mark a", "a.lua", 1, 0, "a")
-      local bm2 = Bookmark.new("mark b", "b.lua", 2, 0, "b")
+    it("returns anchors from multiple projects with project_root attached", function()
+      local bm1 = Anchor.new("mark a", "a.lua", 1, 0, "a")
+      local bm2 = Anchor.new("mark b", "b.lua", 2, 0, "b")
 
       store.save("/project/alpha", { bm1 })
       store.save("/project/beta", { bm2 })
@@ -89,7 +89,7 @@ describe("store", function()
       local all = store.load_all()
       assert.equals(2, #all)
 
-      -- Each bookmark should have a _project_root field
+      -- Each anchor should have a _project_root field
       local roots = {}
       for _, bm in ipairs(all) do
         roots[bm._project_root] = true
@@ -98,13 +98,13 @@ describe("store", function()
       assert.is_true(roots["/project/beta"])
     end)
 
-    it("returns empty list when no projects have bookmarks", function()
+    it("returns empty list when no projects have anchors", function()
       local all = store.load_all()
       assert.same({}, all)
     end)
 
     it("skips corrupt files gracefully", function()
-      local bm = Bookmark.new("good", "g.lua", 1, 0, "x")
+      local bm = Anchor.new("good", "g.lua", 1, 0, "x")
       store.save("/project/good", { bm })
 
       -- Write a corrupt file

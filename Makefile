@@ -4,7 +4,7 @@ PLENARY_DIR ?= ../plenary.nvim
 
 test:
 	nvim --headless -u tests/minimal_init.lua \
-		-c "PlenaryBustedDirectory tests/bookmarks_nvim/ {minimal_init = 'tests/minimal_init.lua', sequential = true}"
+		-c "PlenaryBustedDirectory tests/anchor_nvim/ {minimal_init = 'tests/minimal_init.lua', sequential = true}"
 
 test-file:
 	nvim --headless -u tests/minimal_init.lua \

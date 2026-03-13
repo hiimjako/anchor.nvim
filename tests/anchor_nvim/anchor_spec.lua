@@ -1,0 +1,37 @@
+local Anchor = require("anchor_nvim.anchor")
+
+describe("anchor", function()
+  it("creates an anchor with name, file, line, col, and content", function()
+    local bm = Anchor.new("my mark", "src/main.lua", 10, 5, "  local x = 1")
+
+    assert.equals("my mark", bm.name)
+    assert.equals("src/main.lua", bm.file)
+    assert.equals(10, bm.line)
+    assert.equals(5, bm.col)
+    assert.equals("  local x = 1", bm.content)
+    assert.is_string(bm.id)
+    assert.is_number(bm.created_at)
+    assert.is_number(bm.updated_at)
+  end)
+
+  it("each new anchor gets a unique ID", function()
+    local bm1 = Anchor.new("a", "f.lua", 1, 0, "x")
+    local bm2 = Anchor.new("b", "f.lua", 2, 0, "y")
+    assert.is_not.equals(bm1.id, bm2.id)
+  end)
+
+  it("matches_location returns true for same file and line", function()
+    local bm = Anchor.new("mark", "src/main.lua", 10, 0, "content")
+    assert.is_true(Anchor.matches_location(bm, "src/main.lua", 10))
+  end)
+
+  it("matches_location returns false for different line", function()
+    local bm = Anchor.new("mark", "src/main.lua", 10, 0, "content")
+    assert.is_false(Anchor.matches_location(bm, "src/main.lua", 20))
+  end)
+
+  it("matches_location returns false for different file", function()
+    local bm = Anchor.new("mark", "src/main.lua", 10, 0, "content")
+    assert.is_false(Anchor.matches_location(bm, "src/other.lua", 10))
+  end)
+end)

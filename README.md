@@ -22,14 +22,14 @@ Lua module name: `anchor_nvim`
 
 ```lua
 {
-  "hiimjako/bookmarks-nvim",
+  "hiimjako/anchor-nvim",
   event = "BufReadPost",
   keys = {
-    { "<leader>am", function() require("anchor_nvim").mark() end, desc = "Mark/rename anchor" },
-    { "<leader>ad", function() require("anchor_nvim").delete_mark() end, desc = "Delete anchor" },
-    { "<leader>al", function() require("anchor_nvim").list_anchors() end, desc = "List anchors" },
-    { "<leader>an", function() require("anchor_nvim").next_anchor() end, desc = "Next anchor" },
-    { "<leader>ap", function() require("anchor_nvim").prev_anchor() end, desc = "Prev anchor" },
+    { "<leader>mm", function() require("anchor_nvim").mark() end, desc = "Mark/rename anchor" },
+    { "<leader>md", function() require("anchor_nvim").delete_mark() end, desc = "Delete anchor" },
+    { "<leader>ml", function() require("anchor_nvim").list_anchors() end, desc = "List anchors" },
+    { "<leader>mn", function() require("anchor_nvim").next_anchor() end, desc = "Next anchor" },
+    { "<leader>mp", function() require("anchor_nvim").prev_anchor() end, desc = "Prev anchor" },
   },
   opts = {},
   config = function(_, opts)
@@ -42,7 +42,7 @@ Lua module name: `anchor_nvim`
 
 ```lua
 use {
-  "hiimjako/bookmarks-nvim",
+  "hiimjako/anchor-nvim",
   config = function()
     require("anchor_nvim").setup({})
   end,
@@ -52,7 +52,7 @@ use {
 ### vim-plug
 
 ```vim
-Plug 'hiimjako/bookmarks-nvim'
+Plug 'hiimjako/anchor-nvim'
 lua require("anchor_nvim").setup({})
 ```
 
@@ -80,13 +80,13 @@ require("anchor_nvim").setup({
   },
   -- Default keymaps (set to false to disable all, or override individually)
   keymaps = {
-    mark       = "<leader>am",  -- create/rename anchor
-    delete     = "<leader>ad",  -- delete anchor at cursor
-    list       = "<leader>al",  -- open picker
-    next       = "<leader>an",  -- next anchor in file
-    prev       = "<leader>ap",  -- prev anchor in file
-    delete_all = "<leader>ax",  -- delete all project anchors
-    list_all   = "<leader>aa",  -- search anchors across ALL projects
+    mark       = "<leader>mm",  -- create/rename anchor
+    delete     = "<leader>md",  -- delete anchor at cursor
+    list       = "<leader>ml",  -- open picker
+    next       = "<leader>mn",  -- next anchor in file
+    prev       = "<leader>mp",  -- prev anchor in file
+    delete_all = "<leader>mx",  -- delete all project anchors
+    list_all   = "<leader>ma",  -- search anchors across ALL projects
   },
   -- keymaps = false,           -- disable all default keymaps
 })
@@ -103,8 +103,8 @@ require("anchor_nvim").setup({
 | `:AnchorPrev`        | Jump to previous anchor in current file        |
 | `:AnchorListAll`     | Open picker with anchors from ALL projects     |
 | `:AnchorDeleteAll`   | Delete all anchors in current project          |
-| `:BookmarksNvimToQflist` | Send bookmarks to the quickfix list        |
-| `:BookmarksNvimCleanup`  | Remove stale bookmarks (deleted files/lines)|
+| `:AnchorToQflist`  | Send anchors to the quickfix list              |
+| `:AnchorCleanup`   | Remove stale anchors (deleted files/lines)     |
 
 ## Picker Shortcuts
 
@@ -112,7 +112,7 @@ require("anchor_nvim").setup({
 - `<Esc>` close the picker
 - `<C-n>` / `<C-p>` move selection
 - `<C-d>` delete the selected anchor
-- `<C-j>` / `<C-k>` reorder the selected bookmark (persisted)
+- `<C-j>` / `<C-k>` reorder the selected anchor (persisted)
 
 ## which-key Integration
 
@@ -121,24 +121,24 @@ The default keymaps set `desc` on every mapping, so [which-key.nvim](https://git
 If you disable default keymaps (`keymaps = false`) and bind your own, just include a `desc` field:
 
 ```lua
-vim.keymap.set("n", "<leader>bm", require("bookmarks_nvim").mark, { desc = "Mark/rename bookmark" })
+vim.keymap.set("n", "<leader>mm", require("anchor_nvim").mark, { desc = "Mark/rename anchor" })
 ```
 
 ## Quickfix Integration
 
-Push all project bookmarks into the quickfix list:
+Push all project anchors into the quickfix list:
 
 ```vim
-:BookmarksNvimToQflist
+:AnchorToQflist
 ```
 
 Or from Lua:
 
 ```lua
-require("bookmarks_nvim").quickfix_list()
+require("anchor_nvim").quickfix_list()
 ```
 
-This lets you use standard quickfix workflows (`:cnext`, `:cprev`, `:cdo`) on your bookmarks.
+This lets you use standard quickfix workflows (`:cnext`, `:cprev`, `:cdo`) on your anchors.
 
 ## Statusline
 

@@ -1,28 +1,28 @@
 local M = {}
 
-local ns = vim.api.nvim_create_namespace("BookmarksNvim")
-local sign_group = "BookmarksNvim"
+local ns = vim.api.nvim_create_namespace("Anchor")
+local sign_group = "Anchor"
 
 function M.setup()
-  local config = require("bookmarks_nvim.config").get()
+  local config = require("anchor_nvim.config").get()
   local signs = config.signs
 
-  vim.fn.sign_define("BookmarksNvimMark", {
+  vim.fn.sign_define("AnchorMark", {
     text = signs.icon,
-    texthl = "BookmarksNvimSign",
+    texthl = "AnchorSign",
   })
 
-  vim.api.nvim_set_hl(0, "BookmarksNvimSign", { fg = signs.color })
-  vim.api.nvim_set_hl(0, "BookmarksNvimLine", { bg = signs.line_bg })
-  vim.api.nvim_set_hl(0, "BookmarksNvimVirtText", { fg = signs.color, italic = true })
+  vim.api.nvim_set_hl(0, "AnchorSign", { fg = signs.color })
+  vim.api.nvim_set_hl(0, "AnchorLine", { bg = signs.line_bg })
+  vim.api.nvim_set_hl(0, "AnchorVirtText", { fg = signs.color, italic = true })
 end
 
 function M.refresh(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-  local config = require("bookmarks_nvim.config").get()
-  local store = require("bookmarks_nvim.store")
-  local project = require("bookmarks_nvim.project")
-  local calibrate = require("bookmarks_nvim.calibrate")
+  local config = require("anchor_nvim.config").get()
+  local store = require("anchor_nvim.store")
+  local project = require("anchor_nvim.project")
+  local calibrate = require("anchor_nvim.calibrate")
 
   -- Clear existing signs and extmarks
   vim.fn.sign_unplace(sign_group, { buffer = bufnr })
@@ -39,11 +39,11 @@ function M.refresh(bufnr)
   end
 
   local rel_file = bufpath:sub(#root + 2)
-  local bookmarks = store.load(root)
+  local anchors = store.load(root)
   local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local dirty = false
 
-  for _, bm in ipairs(bookmarks) do
+  for _, bm in ipairs(anchors) do
     if bm.file == rel_file then
       -- Calibrate line drift
       local new_line = calibrate.check(bm, buf_lines)
@@ -59,12 +59,12 @@ function M.refresh(bufnr)
         dirty = true
       end
 
-      vim.fn.sign_place(0, sign_group, "BookmarksNvimMark", bufnr, { lnum = bm.line })
+      vim.fn.sign_place(0, sign_group, "AnchorMark", bufnr, { lnum = bm.line })
 
       vim.api.nvim_buf_set_extmark(bufnr, ns, bm.line - 1, 0, {
-        virt_text = { { config.signs.virt_text_format(bm), "BookmarksNvimVirtText" } },
+        virt_text = { { config.signs.virt_text_format(bm), "AnchorVirtText" } },
         virt_text_pos = "eol",
-        hl_group = "BookmarksNvimLine",
+        hl_group = "AnchorLine",
         end_col = 0,
         end_row = bm.line,
         priority = 10,
@@ -73,7 +73,7 @@ function M.refresh(bufnr)
   end
 
   if dirty then
-    store.save(root, bookmarks)
+    store.save(root, anchors)
   end
 end
 

@@ -1,17 +1,17 @@
-local calibrate = require("bookmarks_nvim.calibrate")
-local Bookmark = require("bookmarks_nvim.bookmark")
+local calibrate = require("anchor_nvim.calibrate")
+local Anchor = require("anchor_nvim.anchor")
 
 describe("line drift detection", function()
-  it("when bookmarked line content still matches, line number stays the same", function()
-    local bm = Bookmark.new("mark", "f.lua", 3, 0, "local c = 3")
+  it("when anchored line content still matches, line number stays the same", function()
+    local bm = Anchor.new("mark", "f.lua", 3, 0, "local c = 3")
     local lines = { "local a = 1", "local b = 2", "local c = 3", "local d = 4" }
 
     local new_line = calibrate.check(bm, lines)
     assert.equals(3, new_line)
   end)
 
-  it("when content has moved down by N lines, bookmark line is updated", function()
-    local bm = Bookmark.new("mark", "f.lua", 3, 0, "local c = 3")
+  it("when content has moved down by N lines, anchor line is updated", function()
+    local bm = Anchor.new("mark", "f.lua", 3, 0, "local c = 3")
     -- Two blank lines inserted above, content is now at line 5
     local lines = { "local a = 1", "local b = 2", "", "", "local c = 3", "local d = 4" }
 
@@ -19,8 +19,8 @@ describe("line drift detection", function()
     assert.equals(5, new_line)
   end)
 
-  it("when content has moved up by N lines, bookmark line is updated", function()
-    local bm = Bookmark.new("mark", "f.lua", 5, 0, "local e = 5")
+  it("when content has moved up by N lines, anchor line is updated", function()
+    local bm = Anchor.new("mark", "f.lua", 5, 0, "local e = 5")
     -- Lines removed above, content is now at line 3
     local lines = { "local a = 1", "local b = 2", "local e = 5", "local f = 6" }
 
@@ -28,8 +28,8 @@ describe("line drift detection", function()
     assert.equals(3, new_line)
   end)
 
-  it("when content is not found nearby, bookmark keeps original line", function()
-    local bm = Bookmark.new("mark", "f.lua", 3, 0, "this line was deleted")
+  it("when content is not found nearby, anchor keeps original line", function()
+    local bm = Anchor.new("mark", "f.lua", 3, 0, "this line was deleted")
     local lines = { "local a = 1", "local b = 2", "local c = 3", "local d = 4" }
 
     local new_line = calibrate.check(bm, lines)
@@ -37,7 +37,7 @@ describe("line drift detection", function()
   end)
 
   it("finds the closest match when content appears multiple times", function()
-    local bm = Bookmark.new("mark", "f.lua", 3, 0, "return true")
+    local bm = Anchor.new("mark", "f.lua", 3, 0, "return true")
     -- "return true" appears at lines 2 and 5; closest to original line 3 is line 2
     local lines = { "if x then", "return true", "end", "if y then", "return true", "end" }
 
@@ -46,7 +46,7 @@ describe("line drift detection", function()
   end)
 
   it("when content drifted beyond search window, keeps original line", function()
-    local bm = Bookmark.new("mark", "f.lua", 5, 0, "target line")
+    local bm = Anchor.new("mark", "f.lua", 5, 0, "target line")
     -- Build 50 lines, put target at line 30 (25 lines away from original 5)
     local lines = {}
     for i = 1, 50 do
@@ -60,7 +60,7 @@ describe("line drift detection", function()
   end)
 
   it("tolerates leading/trailing whitespace differences", function()
-    local bm = Bookmark.new("mark", "f.lua", 2, 0, "  local x = 1  ")
+    local bm = Anchor.new("mark", "f.lua", 2, 0, "  local x = 1  ")
     local lines = { "other", "local x = 1", "more" }
 
     local new_line = calibrate.check(bm, lines)

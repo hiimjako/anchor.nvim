@@ -1,17 +1,17 @@
-# bookmarks_nvim - Development Guide
+# anchor_nvim - Development Guide
 
 ## Project Overview
 
-A Neovim plugin for managing project-scoped bookmarks. Bookmarks are automatically isolated per project (detected via `.git` or configurable root markers). Ships with a built-in floating-window picker and optional Telescope adapter.
+A Neovim plugin for managing project-scoped anchors. Anchors are automatically isolated per project (detected via `.git` or configurable root markers). Ships with a built-in floating-window picker and optional Telescope adapter.
 
 ## Architecture
 
 ```
-lua/bookmarks_nvim/
-  init.lua          -- Public API: setup(), mark(), delete_mark(), list_bookmarks(), list_all_bookmarks(), next/prev, delete_all(), statusline()
+lua/anchor_nvim/
+  init.lua          -- Public API: setup(), mark(), delete_mark(), list_anchors(), list_all_anchors(), next/prev, delete_all(), statusline()
   config.lua        -- Default config + merge logic
   project.lua       -- Project root detection + project ID generation
-  bookmark.lua      -- Bookmark data model constructors + helpers
+  anchor.lua        -- Anchor data model constructors + helpers
   store.lua         -- JSON persistence (one file per project)
   sign.lua          -- Gutter signs + virtual text via extmarks
   calibrate.lua     -- Line drift detection via content matching
@@ -22,14 +22,14 @@ lua/bookmarks_nvim/
     builtin.lua     -- Zero-dep floating window picker with substring filter
     telescope.lua   -- Optional telescope adapter
 plugin/
-  bookmarks_nvim.lua -- Command registration, load guard
+  anchor_nvim.lua -- Command registration, load guard
 ```
 
 ## Module Name Convention
 
-- Repo directory: `bookmarks-nvim` (hyphen, GitHub convention)
-- Lua module path: `bookmarks_nvim` (underscore, Lua convention)
-- User requires: `require("bookmarks_nvim")`
+- Repo directory: `anchor-nvim` (hyphen, GitHub convention)
+- Lua module path: `anchor_nvim` (underscore, Lua convention)
+- User requires: `require("anchor_nvim")`
 
 ## Development Workflow (XP/TDD)
 
@@ -49,17 +49,17 @@ make test
 
 # Run a specific test file
 nvim --headless -u tests/minimal_init.lua \
-  -c "PlenaryBustedFile tests/bookmarks_nvim/project_spec.lua"
+  -c "PlenaryBustedFile tests/anchor_nvim/project_spec.lua"
 ```
 
 Requires `plenary.nvim` cloned at `../plenary.nvim` (sibling directory).
 
 ## Key Design Decisions
 
-- **Storage**: JSON files per project at `stdpath("cache")/bookmarks_nvim/<project_id>.json`. Zero external dependencies.
+- **Storage**: JSON files per project at `stdpath("cache")/anchor_nvim/<project_id>.json`. Zero external dependencies.
 - **Project scoping**: Walk up from buffer directory looking for root markers. Cache per session. Fallback to `cwd`.
 - **Picker**: Built-in floating window (zero deps) + optional Telescope. Falls back to builtin if telescope not available.
-- **Default keymaps**: Sensible defaults provided (`<leader>b*`). Can be disabled entirely with `keymaps = false` or individually with `keymaps = { delete = false }`.
+- **Default keymaps**: Sensible defaults provided (`<leader>m*`). Can be disabled entirely with `keymaps = false` or individually with `keymaps = { delete = false }`.
 - **Lazy loading**: `plugin/` registers commands, `setup()` is called by user. No side effects on `require()`.
 
 ## Formatting

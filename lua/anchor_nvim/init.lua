@@ -1,20 +1,20 @@
 local M = {}
 
 function M.setup(opts)
-  local config = require("bookmarks_nvim.config")
+  local config = require("anchor_nvim.config")
   config.setup(opts)
 
-  local sign = require("bookmarks_nvim.sign")
+  local sign = require("anchor_nvim.sign")
   sign.setup()
 
-  local autocmd = require("bookmarks_nvim.autocmd")
+  local autocmd = require("anchor_nvim.autocmd")
   autocmd.setup()
 
   M._setup_keymaps()
 end
 
 function M._setup_keymaps()
-  local config = require("bookmarks_nvim.config")
+  local config = require("anchor_nvim.config")
   local cfg = config.get()
 
   if cfg.keymaps == false then
@@ -22,13 +22,13 @@ function M._setup_keymaps()
   end
 
   local maps = {
-    { key = cfg.keymaps.mark, fn = M.mark, desc = "Mark/rename bookmark" },
-    { key = cfg.keymaps.delete, fn = M.delete_mark, desc = "Delete bookmark" },
-    { key = cfg.keymaps.list, fn = M.list_bookmarks, desc = "List bookmarks" },
-    { key = cfg.keymaps.next, fn = M.next_bookmark, desc = "Next bookmark" },
-    { key = cfg.keymaps.prev, fn = M.prev_bookmark, desc = "Prev bookmark" },
-    { key = cfg.keymaps.delete_all, fn = M.delete_all, desc = "Delete all bookmarks" },
-    { key = cfg.keymaps.list_all, fn = M.list_all_bookmarks, desc = "List all bookmarks" },
+    { key = cfg.keymaps.mark, fn = M.mark, desc = "Mark/rename anchor" },
+    { key = cfg.keymaps.delete, fn = M.delete_mark, desc = "Delete anchor" },
+    { key = cfg.keymaps.list, fn = M.list_anchors, desc = "List anchors" },
+    { key = cfg.keymaps.next, fn = M.next_anchor, desc = "Next anchor" },
+    { key = cfg.keymaps.prev, fn = M.prev_anchor, desc = "Prev anchor" },
+    { key = cfg.keymaps.delete_all, fn = M.delete_all, desc = "Delete all anchors" },
+    { key = cfg.keymaps.list_all, fn = M.list_all_anchors, desc = "List all anchors" },
   }
 
   for _, map in ipairs(maps) do
@@ -39,7 +39,7 @@ function M._setup_keymaps()
 end
 
 local function get_project_root()
-  local project = require("bookmarks_nvim.project")
+  local project = require("anchor_nvim.project")
   local bufpath = vim.fn.expand("%:p:h")
   local root = project.find_root(bufpath)
   if not root then
@@ -56,10 +56,10 @@ local function get_relative_path(project_root)
   return abs
 end
 
-local function find_bookmark_at_cursor(bookmarks, rel_file, line)
-  local Bookmark = require("bookmarks_nvim.bookmark")
-  for i, bm in ipairs(bookmarks) do
-    if Bookmark.matches_location(bm, rel_file, line) then
+local function find_anchor_at_cursor(anchors, rel_file, line)
+  local Anchor = require("anchor_nvim.anchor")
+  for i, bm in ipairs(anchors) do
+    if Anchor.matches_location(bm, rel_file, line) then
       return bm, i
     end
   end
@@ -67,8 +67,8 @@ local function find_bookmark_at_cursor(bookmarks, rel_file, line)
 end
 
 function M.mark()
-  local store = require("bookmarks_nvim.store")
-  local Bookmark = require("bookmarks_nvim.bookmark")
+  local store = require("anchor_nvim.store")
+  local Anchor = require("anchor_nvim.anchor")
 
   local root = get_project_root()
   local rel_file = get_relative_path(root)
@@ -76,10 +76,10 @@ function M.mark()
   local line = cursor[1]
   local col = cursor[2]
 
-  local bookmarks = store.load(root)
-  local existing, idx = find_bookmark_at_cursor(bookmarks, rel_file, line)
+  local anchors = store.load(root)
+  local existing, idx = find_anchor_at_cursor(anchors, rel_file, line)
 
-  local prompt_opts = { prompt = "Bookmark name: " }
+  local prompt_opts = { prompt = "Anchor name: " }
   if existing then
     prompt_opts.default = existing.name
   end
@@ -90,49 +90,49 @@ function M.mark()
     end
 
     if existing then
-      bookmarks[idx].name = name
-      bookmarks[idx].updated_at = os.time()
+      anchors[idx].name = name
+      anchors[idx].updated_at = os.time()
     else
       local content = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1] or ""
-      local bm = Bookmark.new(name, rel_file, line, col, content)
-      table.insert(bookmarks, bm)
+      local bm = Anchor.new(name, rel_file, line, col, content)
+      table.insert(anchors, bm)
     end
 
-    store.save(root, bookmarks)
-    require("bookmarks_nvim.sign").refresh()
+    store.save(root, anchors)
+    require("anchor_nvim.sign").refresh()
   end)
 end
 
 function M.delete_mark()
-  local store = require("bookmarks_nvim.store")
+  local store = require("anchor_nvim.store")
 
   local root = get_project_root()
   local rel_file = get_relative_path(root)
   local line = vim.api.nvim_win_get_cursor(0)[1]
 
-  local bookmarks = store.load(root)
-  local _, idx = find_bookmark_at_cursor(bookmarks, rel_file, line)
+  local anchors = store.load(root)
+  local _, idx = find_anchor_at_cursor(anchors, rel_file, line)
 
   if not idx then
     return
   end
 
-  table.remove(bookmarks, idx)
-  store.save(root, bookmarks)
-  require("bookmarks_nvim.sign").refresh()
+  table.remove(anchors, idx)
+  store.save(root, anchors)
+  require("anchor_nvim.sign").refresh()
 end
 
-function M.next_bookmark()
-  local config = require("bookmarks_nvim.config")
-  local store = require("bookmarks_nvim.store")
+function M.next_anchor()
+  local config = require("anchor_nvim.config")
+  local store = require("anchor_nvim.store")
 
   local root = get_project_root()
   local rel_file = get_relative_path(root)
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
 
-  local bookmarks = store.load(root)
+  local anchors = store.load(root)
   local file_lines = {}
-  for _, bm in ipairs(bookmarks) do
+  for _, bm in ipairs(anchors) do
     if bm.file == rel_file then
       table.insert(file_lines, bm.line)
     end
@@ -156,17 +156,17 @@ function M.next_bookmark()
   end
 end
 
-function M.prev_bookmark()
-  local config = require("bookmarks_nvim.config")
-  local store = require("bookmarks_nvim.store")
+function M.prev_anchor()
+  local config = require("anchor_nvim.config")
+  local store = require("anchor_nvim.store")
 
   local root = get_project_root()
   local rel_file = get_relative_path(root)
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
 
-  local bookmarks = store.load(root)
+  local anchors = store.load(root)
   local file_lines = {}
-  for _, bm in ipairs(bookmarks) do
+  for _, bm in ipairs(anchors) do
     if bm.file == rel_file then
       table.insert(file_lines, bm.line)
     end
@@ -190,17 +190,17 @@ function M.prev_bookmark()
   end
 end
 
-function M.list_bookmarks()
-  local store = require("bookmarks_nvim.store")
-  local picker = require("bookmarks_nvim.picker")
+function M.list_anchors()
+  local store = require("anchor_nvim.store")
+  local picker = require("anchor_nvim.picker")
 
   local root = get_project_root()
-  local bookmarks = store.load(root)
-  for _, bm in ipairs(bookmarks) do
+  local anchors = store.load(root)
+  for _, bm in ipairs(anchors) do
     bm._abs_path = root .. "/" .. bm.file
   end
 
-  picker.pick(bookmarks, {
+  picker.pick(anchors, {
     on_delete = function(bm)
       local current = store.load(root)
       for i, b in ipairs(current) do
@@ -230,20 +230,20 @@ function M.list_bookmarks()
   end)
 end
 
-function M.list_all_bookmarks()
-  local store = require("bookmarks_nvim.store")
-  local picker = require("bookmarks_nvim.picker")
-  local builtin = require("bookmarks_nvim.picker.builtin")
+function M.list_all_anchors()
+  local store = require("anchor_nvim.store")
+  local picker = require("anchor_nvim.picker")
+  local builtin = require("anchor_nvim.picker.builtin")
 
-  local all_bookmarks = store.load_all()
-  for _, bm in ipairs(all_bookmarks) do
+  local all_anchors = store.load_all()
+  for _, bm in ipairs(all_anchors) do
     if bm._project_root and bm.file then
       bm._abs_path = bm._project_root .. "/" .. bm.file
     end
   end
 
   local format_fn = builtin.format_global_entry
-  picker.pick(all_bookmarks, {
+  picker.pick(all_anchors, {
     format_entry = format_fn,
     on_delete = function(bm)
       if bm._project_root then
@@ -276,26 +276,26 @@ function M.list_all_bookmarks()
 end
 
 function M.delete_all()
-  vim.ui.select({ "Yes", "No" }, { prompt = "Delete all bookmarks in this project?" }, function(choice)
+  vim.ui.select({ "Yes", "No" }, { prompt = "Delete all anchors in this project?" }, function(choice)
     if choice ~= "Yes" then
       return
     end
-    local store = require("bookmarks_nvim.store")
+    local store = require("anchor_nvim.store")
     local root = get_project_root()
     store.save(root, {})
-    require("bookmarks_nvim.sign").refresh()
+    require("anchor_nvim.sign").refresh()
   end)
 end
 
 function M.cleanup()
-  local store = require("bookmarks_nvim.store")
+  local store = require("anchor_nvim.store")
 
   local root = get_project_root()
-  local bookmarks = store.load(root)
-  local original_count = #bookmarks
+  local anchors = store.load(root)
+  local original_count = #anchors
 
   local kept = {}
-  for _, bm in ipairs(bookmarks) do
+  for _, bm in ipairs(anchors) do
     local abs_path = root .. "/" .. bm.file
     if vim.fn.filereadable(abs_path) == 1 then
       local lines = vim.fn.readfile(abs_path)
@@ -309,24 +309,24 @@ function M.cleanup()
 
   local removed = original_count - #kept
   if removed > 0 then
-    require("bookmarks_nvim.sign").refresh()
+    require("anchor_nvim.sign").refresh()
   end
 
   return removed
 end
 
 function M.quickfix_list()
-  local store = require("bookmarks_nvim.store")
+  local store = require("anchor_nvim.store")
 
   local root = get_project_root()
-  local bookmarks = store.load(root)
+  local anchors = store.load(root)
 
-  if #bookmarks == 0 then
+  if #anchors == 0 then
     return
   end
 
   -- Sort by file, then line
-  table.sort(bookmarks, function(a, b)
+  table.sort(anchors, function(a, b)
     if a.file ~= b.file then
       return a.file < b.file
     end
@@ -334,7 +334,7 @@ function M.quickfix_list()
   end)
 
   local items = {}
-  for _, bm in ipairs(bookmarks) do
+  for _, bm in ipairs(anchors) do
     table.insert(items, {
       filename = root .. "/" .. bm.file,
       lnum = bm.line,
@@ -348,8 +348,8 @@ function M.quickfix_list()
 end
 
 function M.statusline()
-  local store = require("bookmarks_nvim.store")
-  local project = require("bookmarks_nvim.project")
+  local store = require("anchor_nvim.store")
+  local project = require("anchor_nvim.project")
 
   local bufpath = vim.fn.expand("%:p:h")
   local root = project.find_root(bufpath)
@@ -357,12 +357,12 @@ function M.statusline()
     return ""
   end
 
-  local bookmarks = store.load(root)
-  if #bookmarks == 0 then
+  local anchors = store.load(root)
+  if #anchors == 0 then
     return ""
   end
 
-  return "󰃁 " .. #bookmarks
+  return "󰃁 " .. #anchors
 end
 
 return M

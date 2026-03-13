@@ -2,9 +2,9 @@ local M = {}
 
 local SEARCH_WINDOW = 20
 
-function M.check(bookmark, lines)
-  local original_line = bookmark.line
-  local content = bookmark.content
+function M.check(anchor, lines)
+  local original_line = anchor.line
+  local content = anchor.content
 
   -- Check if original line still matches
   if lines[original_line] and vim.trim(lines[original_line]) == vim.trim(content) then

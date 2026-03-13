@@ -1,6 +1,6 @@
-local config = require("bookmarks_nvim.config")
-local store = require("bookmarks_nvim.store")
-local Bookmark = require("bookmarks_nvim.bookmark")
+local config = require("anchor_nvim.config")
+local store = require("anchor_nvim.store")
+local Anchor = require("anchor_nvim.anchor")
 
 describe("core operations", function()
   local tmpdir, data_dir, proj_root
@@ -19,7 +19,7 @@ describe("core operations", function()
       keymaps = false,
     })
 
-    require("bookmarks_nvim.sign").setup()
+    require("anchor_nvim.sign").setup()
 
     -- Create a test file and open it
     local test_file = proj_root .. "/src/main.lua"
@@ -48,28 +48,28 @@ describe("core operations", function()
   end)
 
   describe("mark (upsert)", function()
-    it("on an unmarked line creates a bookmark", function()
-      local api = require("bookmarks_nvim")
+    it("on an unmarked line creates an anchor", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
 
       -- Mock vim.ui.input to provide a name
       local original_input = vim.ui.input
       vim.ui.input = function(opts, on_confirm)
-        on_confirm("my bookmark")
+        on_confirm("my anchor")
       end
 
       api.mark()
 
       vim.ui.input = original_input
 
-      local bookmarks = store.load(proj_root)
-      assert.equals(1, #bookmarks)
-      assert.equals("my bookmark", bookmarks[1].name)
-      assert.equals(2, bookmarks[1].line)
+      local anchors = store.load(proj_root)
+      assert.equals(1, #anchors)
+      assert.equals("my anchor", anchors[1].name)
+      assert.equals(2, anchors[1].line)
     end)
 
-    it("on an already bookmarked line renames it", function()
-      local api = require("bookmarks_nvim")
+    it("on an already anchored line renames it", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
 
       local call_count = 0
@@ -90,13 +90,13 @@ describe("core operations", function()
 
       vim.ui.input = original_input
 
-      local bookmarks = store.load(proj_root)
-      assert.equals(1, #bookmarks)
-      assert.equals("renamed", bookmarks[1].name)
+      local anchors = store.load(proj_root)
+      assert.equals(1, #anchors)
+      assert.equals("renamed", anchors[1].name)
     end)
 
     it("stores the line content from the buffer", function()
-      local api = require("bookmarks_nvim")
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 3, 0 })
 
       local original_input = vim.ui.input
@@ -108,12 +108,12 @@ describe("core operations", function()
 
       vim.ui.input = original_input
 
-      local bookmarks = store.load(proj_root)
-      assert.equals("local c = 3", bookmarks[1].content)
+      local anchors = store.load(proj_root)
+      assert.equals("local c = 3", anchors[1].content)
     end)
 
     it("stores file path relative to project root", function()
-      local api = require("bookmarks_nvim")
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
       local original_input = vim.ui.input
@@ -125,12 +125,12 @@ describe("core operations", function()
 
       vim.ui.input = original_input
 
-      local bookmarks = store.load(proj_root)
-      assert.equals("src/main.lua", bookmarks[1].file)
+      local anchors = store.load(proj_root)
+      assert.equals("src/main.lua", anchors[1].file)
     end)
 
-    it("does not create bookmark when user cancels input", function()
-      local api = require("bookmarks_nvim")
+    it("does not create anchor when user cancels input", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
       local original_input = vim.ui.input
@@ -142,12 +142,12 @@ describe("core operations", function()
 
       vim.ui.input = original_input
 
-      local bookmarks = store.load(proj_root)
-      assert.equals(0, #bookmarks)
+      local anchors = store.load(proj_root)
+      assert.equals(0, #anchors)
     end)
 
-    it("bookmarks persist after save and reload", function()
-      local api = require("bookmarks_nvim")
+    it("anchors persist after save and reload", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
       local original_input = vim.ui.input
@@ -167,8 +167,8 @@ describe("core operations", function()
   end)
 
   describe("delete_mark", function()
-    it("removes the bookmark at cursor line", function()
-      local api = require("bookmarks_nvim")
+    it("removes the anchor at cursor line", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
 
       local original_input = vim.ui.input
@@ -186,8 +186,8 @@ describe("core operations", function()
       assert.equals(0, #store.load(proj_root))
     end)
 
-    it("does nothing when cursor is not on a bookmarked line", function()
-      local api = require("bookmarks_nvim")
+    it("does nothing when cursor is not on an anchored line", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
 
       local original_input = vim.ui.input
@@ -206,7 +206,7 @@ describe("core operations", function()
   end)
 
   describe("navigation", function()
-    local function add_bookmark(api, line, name)
+    local function add_anchor(api, line, name)
       vim.api.nvim_win_set_cursor(0, { line, 0 })
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -216,83 +216,83 @@ describe("core operations", function()
       vim.ui.input = original_input
     end
 
-    it("next_bookmark moves cursor to the next bookmarked line", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 2, "b")
-      add_bookmark(api, 4, "d")
+    it("next_anchor moves cursor to the next anchored line", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 2, "b")
+      add_anchor(api, 4, "d")
 
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
 
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("prev_bookmark moves cursor to the previous bookmarked line", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 2, "b")
-      add_bookmark(api, 4, "d")
+    it("prev_anchor moves cursor to the previous anchored line", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 2, "b")
+      add_anchor(api, 4, "d")
 
       vim.api.nvim_win_set_cursor(0, { 5, 0 })
-      api.prev_bookmark()
+      api.prev_anchor()
       assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
 
-      api.prev_bookmark()
+      api.prev_anchor()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("next_bookmark wraps around when wrap is enabled", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 2, "b")
-      add_bookmark(api, 4, "d")
+    it("next_anchor wraps around when wrap is enabled", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 2, "b")
+      add_anchor(api, 4, "d")
 
       vim.api.nvim_win_set_cursor(0, { 4, 0 })
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("prev_bookmark wraps around when wrap is enabled", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 2, "b")
-      add_bookmark(api, 4, "d")
+    it("prev_anchor wraps around when wrap is enabled", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 2, "b")
+      add_anchor(api, 4, "d")
 
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
-      api.prev_bookmark()
+      api.prev_anchor()
       assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("next_bookmark does nothing when no bookmarks exist", function()
-      local api = require("bookmarks_nvim")
+    it("next_anchor does nothing when no anchors exist", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 3, 0 })
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("prev_bookmark does nothing when no bookmarks exist", function()
-      local api = require("bookmarks_nvim")
+    it("prev_anchor does nothing when no anchors exist", function()
+      local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 3, 0 })
-      api.prev_bookmark()
+      api.prev_anchor()
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("next_bookmark does not wrap when wrap is disabled", function()
+    it("next_anchor does not wrap when wrap is disabled", function()
       config.setup({ data_dir = data_dir, keymaps = false, navigation = { wrap = false } })
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 2, "b")
+      local api = require("anchor_nvim")
+      add_anchor(api, 2, "b")
 
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("prev_bookmark does not wrap when wrap is disabled", function()
+    it("prev_anchor does not wrap when wrap is disabled", function()
       config.setup({ data_dir = data_dir, keymaps = false, navigation = { wrap = false } })
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 4, "d")
+      local api = require("anchor_nvim")
+      add_anchor(api, 4, "d")
 
       vim.api.nvim_win_set_cursor(0, { 4, 0 })
-      api.prev_bookmark()
+      api.prev_anchor()
       assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
     end)
   end)
@@ -312,8 +312,8 @@ describe("core operations", function()
       vim.ui.input = original_input
     end
 
-    it("removes all bookmarks when user confirms", function()
-      local api = require("bookmarks_nvim")
+    it("removes all anchors when user confirms", function()
+      local api = require("anchor_nvim")
       add_marks(api, { 1, 3 })
       assert.equals(2, #store.load(proj_root))
 
@@ -328,8 +328,8 @@ describe("core operations", function()
       assert.equals(0, #store.load(proj_root))
     end)
 
-    it("keeps bookmarks when user cancels", function()
-      local api = require("bookmarks_nvim")
+    it("keeps anchors when user cancels", function()
+      local api = require("anchor_nvim")
       add_marks(api, { 1, 3 })
       assert.equals(2, #store.load(proj_root))
 
@@ -345,11 +345,11 @@ describe("core operations", function()
     end)
   end)
 
-  describe("multi-file bookmarking", function()
+  describe("multi-file anchoring", function()
     it("navigation stays within the current file", function()
-      local api = require("bookmarks_nvim")
+      local api = require("anchor_nvim")
 
-      -- Create a second file and bookmark it
+      -- Create a second file and anchor it
       local second_file = proj_root .. "/src/other.lua"
       local f = io.open(second_file, "w")
       f:write("local x = 1\nlocal y = 2\nlocal z = 3\n")
@@ -364,7 +364,7 @@ describe("core operations", function()
       api.mark()
       vim.ui.input = original_input
 
-      -- Go back to original file and add a bookmark
+      -- Go back to original file and add an anchor
       local test_file = proj_root .. "/src/main.lua"
       vim.cmd("edit " .. test_file)
       vim.api.nvim_win_set_cursor(0, { 3, 0 })
@@ -374,22 +374,22 @@ describe("core operations", function()
       api.mark()
       vim.ui.input = original_input
 
-      -- next_bookmark should stay in current file, not jump to other.lua
+      -- next_anchor should stay in current file, not jump to other.lua
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
 
       -- Wrapping should also stay in current file
-      api.next_bookmark()
+      api.next_anchor()
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
     end)
   end)
 
-  describe("list_bookmarks", function()
-    it("selecting a bookmark works when buffer has unsaved changes", function()
-      local api = require("bookmarks_nvim")
+  describe("list_anchors", function()
+    it("selecting an anchor works when buffer has unsaved changes", function()
+      local api = require("anchor_nvim")
 
-      -- Add a bookmark on line 3
+      -- Add an anchor on line 3
       vim.api.nvim_win_set_cursor(0, { 3, 0 })
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -398,28 +398,28 @@ describe("core operations", function()
       api.mark()
       vim.ui.input = original_input
 
-      -- Move cursor away from bookmarked line
+      -- Move cursor away from anchored line
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
       -- Make the buffer dirty (unsaved changes)
       vim.api.nvim_buf_set_lines(0, 0, 1, false, { "local changed = true" })
       assert.is_true(vim.bo.modified)
 
-      -- Open the list picker and select the bookmark
-      api.list_bookmarks()
+      -- Open the list picker and select the anchor
+      api.list_anchors()
       local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
       vim.api.nvim_feedkeys(keys, "x", false)
 
-      -- Should jump to the bookmarked line without error
+      -- Should jump to the anchored line without error
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
       -- Should return to normal mode, not leave user in insert mode
       assert.equals("n", vim.fn.mode())
     end)
 
-    it("selecting a cross-file bookmark works when current buffer is modified", function()
-      local api = require("bookmarks_nvim")
+    it("selecting a cross-file anchor works when current buffer is modified", function()
+      local api = require("anchor_nvim")
 
-      -- Create a second file and bookmark it
+      -- Create a second file and anchor it
       local second_file = proj_root .. "/src/other.lua"
       local f = io.open(second_file, "w")
       f:write("local x = 1\nlocal y = 2\nlocal z = 3\n")
@@ -440,9 +440,9 @@ describe("core operations", function()
       vim.api.nvim_buf_set_lines(0, 0, 1, false, { "local changed = true" })
       assert.is_true(vim.bo.modified)
 
-      -- Selecting the cross-file bookmark should not error
+      -- Selecting the cross-file anchor should not error
       -- (confirm drop handles the modified buffer gracefully)
-      api.list_bookmarks()
+      api.list_anchors()
       local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
       vim.api.nvim_feedkeys(keys, "x", false)
 
@@ -452,11 +452,11 @@ describe("core operations", function()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
-    it("returns to normal mode after selecting a bookmark", function()
-      local api = require("bookmarks_nvim")
-      local builtin = require("bookmarks_nvim.picker.builtin")
+    it("returns to normal mode after selecting an anchor", function()
+      local api = require("anchor_nvim")
+      local builtin = require("anchor_nvim.picker.builtin")
 
-      -- Add a bookmark
+      -- Add an anchor
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -466,7 +466,7 @@ describe("core operations", function()
       vim.ui.input = original_input
 
       -- Open picker (enters insert mode internally)
-      api.list_bookmarks()
+      api.list_anchors()
       -- Simulate: enter insert mode then press CR to select
       local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
       vim.api.nvim_feedkeys(keys, "x", false)
@@ -477,17 +477,17 @@ describe("core operations", function()
   end)
 
   describe("sign refresh", function()
-    it("does not crash when bookmark line exceeds buffer length", function()
-      local sign = require("bookmarks_nvim.sign")
-      local project = require("bookmarks_nvim.project")
+    it("does not crash when anchor line exceeds buffer length", function()
+      local sign = require("anchor_nvim.sign")
+      local project = require("anchor_nvim.project")
       sign.setup()
 
       -- Get the root the same way sign.refresh resolves it
       local bufpath = vim.api.nvim_buf_get_name(0)
       local root = project.find_root(vim.fn.fnamemodify(bufpath, ":h"))
 
-      -- Save a bookmark at line 50, but the file only has 5 lines
-      local bm = Bookmark.new("far away", "src/main.lua", 50, 0, "deleted line")
+      -- Save an anchor at line 50, but the file only has 5 lines
+      local bm = Anchor.new("far away", "src/main.lua", 50, 0, "deleted line")
       store.save(root, { bm })
 
       -- Should not throw an error
@@ -495,14 +495,14 @@ describe("core operations", function()
         sign.refresh()
       end)
 
-      -- Bookmark should be clamped to last line
-      local bookmarks = store.load(root)
-      assert.equals(5, bookmarks[1].line)
+      -- Anchor should be clamped to last line
+      local anchors = store.load(root)
+      assert.equals(5, anchors[1].line)
     end)
   end)
 
   describe("quickfix_list", function()
-    local function add_bookmark(api, line, name)
+    local function add_anchor(api, line, name)
       vim.api.nvim_win_set_cursor(0, { line, 0 })
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -512,10 +512,10 @@ describe("core operations", function()
       vim.ui.input = original_input
     end
 
-    it("populates quickfix list with current project bookmarks", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 2, "second line")
-      add_bookmark(api, 4, "fourth line")
+    it("populates quickfix list with current project anchors", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 2, "second line")
+      add_anchor(api, 4, "fourth line")
 
       api.quickfix_list()
 
@@ -525,9 +525,9 @@ describe("core operations", function()
       assert.equals(4, qflist[2].lnum)
     end)
 
-    it("includes bookmark name in quickfix text", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 3, "important spot")
+    it("includes anchor name in quickfix text", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 3, "important spot")
 
       api.quickfix_list()
 
@@ -537,8 +537,8 @@ describe("core operations", function()
     end)
 
     it("sets correct filename in quickfix entries", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 1, "top")
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "top")
 
       api.quickfix_list()
 
@@ -547,8 +547,8 @@ describe("core operations", function()
       assert.truthy(bufname:find("src/main.lua"))
     end)
 
-    it("does nothing when there are no bookmarks", function()
-      local api = require("bookmarks_nvim")
+    it("does nothing when there are no anchors", function()
+      local api = require("anchor_nvim")
 
       -- Clear quickfix first
       vim.fn.setqflist({})
@@ -560,7 +560,7 @@ describe("core operations", function()
     end)
 
     it("sorts entries by file then line number", function()
-      local api = require("bookmarks_nvim")
+      local api = require("anchor_nvim")
 
       -- Create a second file
       local second_file = proj_root .. "/src/other.lua"
@@ -568,14 +568,14 @@ describe("core operations", function()
       f:write("local x = 1\nlocal y = 2\nlocal z = 3\n")
       f:close()
 
-      -- Bookmark in second file first
+      -- Anchor in second file first
       vim.cmd("edit " .. second_file)
-      add_bookmark(api, 2, "other mark")
+      add_anchor(api, 2, "other mark")
 
-      -- Bookmark in main file
+      -- Anchor in main file
       vim.cmd("edit " .. proj_root .. "/src/main.lua")
-      add_bookmark(api, 4, "main mark 4")
-      add_bookmark(api, 1, "main mark 1")
+      add_anchor(api, 4, "main mark 4")
+      add_anchor(api, 1, "main mark 1")
 
       api.quickfix_list()
 
@@ -588,8 +588,8 @@ describe("core operations", function()
     end)
   end)
 
-  describe("bookmark reordering", function()
-    local function add_bookmark(api, line, name)
+  describe("anchor reordering", function()
+    local function add_anchor(api, line, name)
       vim.api.nvim_win_set_cursor(0, { line, 0 })
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -604,70 +604,70 @@ describe("core operations", function()
       vim.api.nvim_feedkeys(keys, "x", false)
     end
 
-    it("C-j moves the selected bookmark down and persists the order", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 1, "first")
-      add_bookmark(api, 2, "second")
-      add_bookmark(api, 3, "third")
+    it("C-j moves the selected anchor down and persists the order", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "first")
+      add_anchor(api, 2, "second")
+      add_anchor(api, 3, "third")
 
-      api.list_bookmarks()
+      api.list_anchors()
       feed("<C-j><Esc>")
 
-      local bookmarks = store.load(proj_root)
-      assert.equals("second", bookmarks[1].name)
-      assert.equals("first", bookmarks[2].name)
-      assert.equals("third", bookmarks[3].name)
+      local anchors = store.load(proj_root)
+      assert.equals("second", anchors[1].name)
+      assert.equals("first", anchors[2].name)
+      assert.equals("third", anchors[3].name)
     end)
 
-    it("C-k moves the selected bookmark up and persists the order", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 1, "first")
-      add_bookmark(api, 2, "second")
-      add_bookmark(api, 3, "third")
+    it("C-k moves the selected anchor up and persists the order", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "first")
+      add_anchor(api, 2, "second")
+      add_anchor(api, 3, "third")
 
-      api.list_bookmarks()
+      api.list_anchors()
       -- Move down to "second", then move it up
       feed("<C-n><C-k><Esc>")
 
-      local bookmarks = store.load(proj_root)
-      assert.equals("second", bookmarks[1].name)
-      assert.equals("first", bookmarks[2].name)
-      assert.equals("third", bookmarks[3].name)
+      local anchors = store.load(proj_root)
+      assert.equals("second", anchors[1].name)
+      assert.equals("first", anchors[2].name)
+      assert.equals("third", anchors[3].name)
     end)
 
-    it("C-j does nothing when the last bookmark is selected", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 1, "first")
-      add_bookmark(api, 2, "second")
+    it("C-j does nothing when the last anchor is selected", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "first")
+      add_anchor(api, 2, "second")
 
-      api.list_bookmarks()
+      api.list_anchors()
       -- Move to last item, try to move down
       feed("<C-n><C-j><Esc>")
 
-      local bookmarks = store.load(proj_root)
-      assert.equals("first", bookmarks[1].name)
-      assert.equals("second", bookmarks[2].name)
+      local anchors = store.load(proj_root)
+      assert.equals("first", anchors[1].name)
+      assert.equals("second", anchors[2].name)
     end)
 
-    it("C-k does nothing when the first bookmark is selected", function()
-      local api = require("bookmarks_nvim")
-      add_bookmark(api, 1, "first")
-      add_bookmark(api, 2, "second")
+    it("C-k does nothing when the first anchor is selected", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "first")
+      add_anchor(api, 2, "second")
 
-      api.list_bookmarks()
+      api.list_anchors()
       feed("<C-k><Esc>")
 
-      local bookmarks = store.load(proj_root)
-      assert.equals("first", bookmarks[1].name)
-      assert.equals("second", bookmarks[2].name)
+      local anchors = store.load(proj_root)
+      assert.equals("first", anchors[1].name)
+      assert.equals("second", anchors[2].name)
     end)
   end)
 
   describe("cleanup", function()
-    it("removes bookmarks pointing to deleted files", function()
-      local api = require("bookmarks_nvim")
+    it("removes anchors pointing to deleted files", function()
+      local api = require("anchor_nvim")
 
-      -- Create a file, bookmark it, then delete the file
+      -- Create a file, anchor it, then delete the file
       local temp_file = proj_root .. "/src/gone.lua"
       local f = io.open(temp_file, "w")
       f:write("local gone = true\n")
@@ -682,7 +682,7 @@ describe("core operations", function()
       api.mark()
       vim.ui.input = original_input
 
-      -- Also bookmark the main file
+      -- Also anchor the main file
       vim.cmd("edit " .. proj_root .. "/src/main.lua")
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
       vim.ui.input = function(_, on_confirm)
@@ -698,15 +698,15 @@ describe("core operations", function()
 
       api.cleanup()
 
-      local bookmarks = store.load(proj_root)
-      assert.equals(1, #bookmarks)
-      assert.equals("keeper", bookmarks[1].name)
+      local anchors = store.load(proj_root)
+      assert.equals(1, #anchors)
+      assert.equals("keeper", anchors[1].name)
     end)
 
-    it("removes bookmarks whose line exceeds file length", function()
-      local api = require("bookmarks_nvim")
+    it("removes anchors whose line exceeds file length", function()
+      local api = require("anchor_nvim")
 
-      -- Bookmark line 5
+      -- Anchor line 5
       vim.api.nvim_win_set_cursor(0, { 5, 0 })
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -715,7 +715,7 @@ describe("core operations", function()
       api.mark()
       vim.ui.input = original_input
 
-      -- Bookmark line 1
+      -- Anchor line 1
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
       vim.ui.input = function(_, on_confirm)
         on_confirm("top")
@@ -733,13 +733,13 @@ describe("core operations", function()
 
       api.cleanup()
 
-      local bookmarks = store.load(proj_root)
-      assert.equals(1, #bookmarks)
-      assert.equals("top", bookmarks[1].name)
+      local anchors = store.load(proj_root)
+      assert.equals(1, #anchors)
+      assert.equals("top", anchors[1].name)
     end)
 
-    it("keeps all bookmarks when everything is valid", function()
-      local api = require("bookmarks_nvim")
+    it("keeps all anchors when everything is valid", function()
+      local api = require("anchor_nvim")
 
       local original_input = vim.ui.input
       vim.ui.input = function(_, on_confirm)
@@ -756,10 +756,10 @@ describe("core operations", function()
       assert.equals(2, #store.load(proj_root))
     end)
 
-    it("returns the count of removed bookmarks", function()
-      local api = require("bookmarks_nvim")
+    it("returns the count of removed anchors", function()
+      local api = require("anchor_nvim")
 
-      -- Bookmark a file that will be deleted
+      -- Anchor a file that will be deleted
       local temp_file = proj_root .. "/src/gone.lua"
       local f = io.open(temp_file, "w")
       f:write("local gone = true\n")
@@ -782,13 +782,13 @@ describe("core operations", function()
   end)
 
   describe("statusline", function()
-    it("returns empty string when no bookmarks in current project", function()
-      local api = require("bookmarks_nvim")
+    it("returns empty string when no anchors in current project", function()
+      local api = require("anchor_nvim")
       assert.equals("", api.statusline())
     end)
 
-    it("returns bookmark count for current project", function()
-      local api = require("bookmarks_nvim")
+    it("returns anchor count for current project", function()
+      local api = require("anchor_nvim")
 
       local original_input = vim.ui.input
       local call_count = 0

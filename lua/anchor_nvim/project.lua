@@ -1,4 +1,4 @@
-local config = require("bookmarks_nvim.config")
+local config = require("anchor_nvim.config")
 
 local M = {}
 

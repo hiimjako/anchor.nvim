@@ -7,13 +7,13 @@ function M.substring_match(query, text)
   return text:lower():find(query:lower(), 1, true) ~= nil
 end
 
-function M.filter_bookmarks(bookmarks, query)
+function M.filter_anchors(anchors, query)
   if query == "" then
-    return vim.list_slice(bookmarks, 1, #bookmarks)
+    return vim.list_slice(anchors, 1, #anchors)
   end
 
   local results = {}
-  for _, bm in ipairs(bookmarks) do
+  for _, bm in ipairs(anchors) do
     local searchable = bm.name .. " " .. bm.file .. " " .. (bm.content or "") .. " " .. (bm._project_root or "")
     if M.substring_match(query, searchable) then
       table.insert(results, bm)
@@ -26,28 +26,28 @@ function M.extract_query(line)
   return line or ""
 end
 
-function M.format_entry(bookmark)
-  return string.format("%s | %s:%d | %s", bookmark.name, bookmark.file, bookmark.line, vim.trim(bookmark.content or ""))
+function M.format_entry(anchor)
+  return string.format("%s | %s:%d | %s", anchor.name, anchor.file, anchor.line, vim.trim(anchor.content or ""))
 end
 
-function M.format_global_entry(bookmark)
-  local project_name = vim.fn.fnamemodify(bookmark._project_root or "", ":t")
+function M.format_global_entry(anchor)
+  local project_name = vim.fn.fnamemodify(anchor._project_root or "", ":t")
   return string.format(
     "%s | %s/%s:%d | %s",
-    bookmark.name,
+    anchor.name,
     project_name,
-    bookmark.file,
-    bookmark.line,
-    vim.trim(bookmark.content or "")
+    anchor.file,
+    anchor.line,
+    vim.trim(anchor.content or "")
   )
 end
 
-function M.pick(bookmarks, opts, on_select)
+function M.pick(anchors, opts, on_select)
   opts = opts or {}
-  local config = require("bookmarks_nvim.config").get()
+  local config = require("anchor_nvim.config").get()
   local picker_config = config.picker
 
-  vim.api.nvim_set_hl(0, "BookmarksNvimPickerSel", { link = "Visual", default = true })
+  vim.api.nvim_set_hl(0, "AnchorPickerSel", { link = "Visual", default = true })
 
   local width_ratio = picker_config.width_ratio or 0.6
   local height_ratio = picker_config.height_ratio or 0.5
@@ -78,7 +78,7 @@ function M.pick(bookmarks, opts, on_select)
     col = col,
     style = "minimal",
     border = "rounded",
-    title = " Bookmarks ",
+    title = " Anchors ",
     title_pos = "center",
   })
 
@@ -95,17 +95,17 @@ function M.pick(bookmarks, opts, on_select)
     title_pos = "center",
   })
 
-  local ns = vim.api.nvim_create_namespace("BookmarksNvimPicker")
+  local ns = vim.api.nvim_create_namespace("AnchorPicker")
 
   -- Show a "> " prompt prefix via inline virtual text
-  local prompt_ns = vim.api.nvim_create_namespace("BookmarksNvimPrompt")
+  local prompt_ns = vim.api.nvim_create_namespace("AnchorPrompt")
   vim.api.nvim_buf_set_extmark(prompt_buf, prompt_ns, 0, 0, {
     virt_text = { { "> ", "Comment" } },
     virt_text_pos = "inline",
   })
 
   local selected_idx = 1
-  local filtered = bookmarks
+  local filtered = anchors
   local entry_formatter = opts.format_entry or M.format_entry
 
   local function render()
@@ -121,7 +121,7 @@ function M.pick(bookmarks, opts, on_select)
       vim.api.nvim_buf_set_extmark(results_buf, ns, selected_idx - 1, 0, {
         end_col = 0,
         end_row = selected_idx,
-        hl_group = "BookmarksNvimPickerSel",
+        hl_group = "AnchorPickerSel",
         hl_eol = true,
       })
     end
@@ -157,11 +157,11 @@ function M.pick(bookmarks, opts, on_select)
       -- Re-filter after deletion
       local query_lines = vim.api.nvim_buf_get_lines(prompt_buf, 0, -1, false)
       local query = M.extract_query(query_lines[1])
-      -- Reload bookmarks from opts source
+      -- Reload anchors from opts source
       if opts.reload then
-        bookmarks = opts.reload()
+        anchors = opts.reload()
       end
-      filtered = M.filter_bookmarks(bookmarks, query)
+      filtered = M.filter_anchors(anchors, query)
       selected_idx = math.min(selected_idx, math.max(1, #filtered))
       render()
     end
@@ -201,7 +201,7 @@ function M.pick(bookmarks, opts, on_select)
     delete_current()
   end, keymap_opts)
 
-  local function move_bookmark(direction)
+  local function move_anchor(direction)
     if #filtered == 0 or selected_idx > #filtered then
       return
     end
@@ -213,9 +213,9 @@ function M.pick(bookmarks, opts, on_select)
     local bm_a = filtered[selected_idx]
     local bm_b = filtered[target_idx]
 
-    -- Swap in source bookmarks list
+    -- Swap in source anchors list
     local src_a, src_b
-    for i, bm in ipairs(bookmarks) do
+    for i, bm in ipairs(anchors) do
       if bm.id == bm_a.id then
         src_a = i
       end
@@ -224,28 +224,28 @@ function M.pick(bookmarks, opts, on_select)
       end
     end
     if src_a and src_b then
-      bookmarks[src_a], bookmarks[src_b] = bookmarks[src_b], bookmarks[src_a]
+      anchors[src_a], anchors[src_b] = anchors[src_b], anchors[src_a]
     end
 
-    -- Re-derive filtered from bookmarks
+    -- Re-derive filtered from anchors
     local query_lines = vim.api.nvim_buf_get_lines(prompt_buf, 0, -1, false)
     local query = M.extract_query(query_lines[1])
-    filtered = M.filter_bookmarks(bookmarks, query)
+    filtered = M.filter_anchors(anchors, query)
 
     selected_idx = target_idx
     render()
 
     if opts.on_reorder then
-      opts.on_reorder(bookmarks)
+      opts.on_reorder(anchors)
     end
   end
 
   vim.keymap.set("i", "<C-j>", function()
-    move_bookmark(1)
+    move_anchor(1)
   end, keymap_opts)
 
   vim.keymap.set("i", "<C-k>", function()
-    move_bookmark(-1)
+    move_anchor(-1)
   end, keymap_opts)
 
   -- Filter on every keystroke
@@ -257,7 +257,7 @@ function M.pick(bookmarks, opts, on_select)
         end
         local lines = vim.api.nvim_buf_get_lines(prompt_buf, 0, -1, false)
         local query = M.extract_query(lines[1])
-        filtered = M.filter_bookmarks(bookmarks, query)
+        filtered = M.filter_anchors(anchors, query)
         selected_idx = 1
         render()
       end)

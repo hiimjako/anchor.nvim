@@ -1,5 +1,5 @@
-local config = require("bookmarks_nvim.config")
-local project = require("bookmarks_nvim.project")
+local config = require("anchor_nvim.config")
+local project = require("anchor_nvim.project")
 
 local M = {}
 
@@ -28,10 +28,10 @@ function M.load(project_root)
     return {}
   end
 
-  return data.bookmarks or {}
+  return data.anchors or {}
 end
 
-function M.save(project_root, bookmarks)
+function M.save(project_root, anchors)
   local path = M.get_store_path(project_root)
   local dir = vim.fn.fnamemodify(path, ":h")
 
@@ -41,14 +41,14 @@ function M.save(project_root, bookmarks)
 
   local data = {
     project_root = project_root,
-    bookmarks = bookmarks,
+    anchors = anchors,
   }
 
   local json = vim.fn.json_encode(data)
 
   local f = io.open(path, "w")
   if not f then
-    vim.notify("bookmarks_nvim: failed to write " .. path, vim.log.levels.ERROR)
+    vim.notify("anchor_nvim: failed to write " .. path, vim.log.levels.ERROR)
     return
   end
 
@@ -73,9 +73,9 @@ function M.load_all()
       local content = f:read("*a")
       f:close()
       local ok, data = pcall(vim.fn.json_decode, content)
-      if ok and type(data) == "table" and data.bookmarks then
+      if ok and type(data) == "table" and data.anchors then
         local root = data.project_root or ""
-        for _, bm in ipairs(data.bookmarks) do
+        for _, bm in ipairs(data.anchors) do
           bm._project_root = root
           table.insert(all, bm)
         end

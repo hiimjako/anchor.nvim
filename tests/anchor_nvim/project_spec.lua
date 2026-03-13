@@ -1,5 +1,5 @@
-local project = require("bookmarks_nvim.project")
-local config = require("bookmarks_nvim.config")
+local project = require("anchor_nvim.project")
+local config = require("anchor_nvim.config")
 
 describe("project detection", function()
   local tmpdir

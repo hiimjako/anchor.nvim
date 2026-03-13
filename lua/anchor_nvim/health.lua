@@ -1,7 +1,7 @@
 local M = {}
 
 function M.check()
-  vim.health.start("bookmarks_nvim")
+  vim.health.start("anchor_nvim")
 
   -- Check Neovim version
   if vim.fn.has("nvim-0.9") == 1 then
@@ -11,12 +11,12 @@ function M.check()
   end
 
   -- Check data directory
-  local config = require("bookmarks_nvim.config").get()
+  local config = require("anchor_nvim.config").get()
   local data_dir = config.data_dir
   if vim.fn.isdirectory(data_dir) == 1 then
     vim.health.ok("Data directory exists: " .. data_dir)
   else
-    vim.health.info("Data directory does not exist yet (will be created on first bookmark): " .. data_dir)
+    vim.health.info("Data directory does not exist yet (will be created on first anchor): " .. data_dir)
   end
 
   -- Check telescope if configured
@@ -34,7 +34,7 @@ function M.check()
   end
 
   -- Check project root detection
-  local project = require("bookmarks_nvim.project")
+  local project = require("anchor_nvim.project")
   local bufpath = vim.fn.expand("%:p:h")
   local root = project.find_root(bufpath)
   if root then

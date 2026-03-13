@@ -1,4 +1,4 @@
-local config = require("bookmarks_nvim.config")
+local config = require("anchor_nvim.config")
 
 describe("config", function()
   before_each(function()
@@ -17,7 +17,7 @@ describe("config", function()
     assert.is_table(cfg.navigation)
     assert.is_true(cfg.navigation.wrap)
     assert.is_table(cfg.keymaps)
-    assert.equals("<leader>bm", cfg.keymaps.mark)
+    assert.equals("<leader>mm", cfg.keymaps.mark)
   end)
 
   it("setup merges user opts over defaults", function()
@@ -50,8 +50,8 @@ describe("config", function()
     assert.equals("<leader>mm", cfg.keymaps.mark)
     assert.equals("<leader>ml", cfg.keymaps.list)
     -- non-overridden keys keep defaults
-    assert.equals("<leader>bd", cfg.keymaps.delete)
-    assert.equals("<leader>bn", cfg.keymaps.next)
+    assert.equals("<leader>md", cfg.keymaps.delete)
+    assert.equals("<leader>mn", cfg.keymaps.next)
   end)
 
   it("setting a keymap to false disables that specific keymap", function()
@@ -62,6 +62,6 @@ describe("config", function()
 
     assert.is_false(cfg.keymaps.delete)
     -- other keymaps still have defaults
-    assert.equals("<leader>bm", cfg.keymaps.mark)
+    assert.equals("<leader>mm", cfg.keymaps.mark)
   end)
 end)

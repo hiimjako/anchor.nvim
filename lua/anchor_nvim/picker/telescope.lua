@@ -1,13 +1,13 @@
 local M = {}
 
-function M.pick(bookmarks, opts, on_select)
+function M.pick(anchors, opts, on_select)
   local pickers = require("telescope.pickers")
   local finders = require("telescope.finders")
   local conf = require("telescope.config").values
   local actions = require("telescope.actions")
   local action_state = require("telescope.actions.state")
 
-  local builtin = require("bookmarks_nvim.picker.builtin")
+  local builtin = require("anchor_nvim.picker.builtin")
   local formatter = (opts and opts.format_entry) or builtin.format_entry
 
   local function make_entry(bm)
@@ -28,9 +28,9 @@ function M.pick(bookmarks, opts, on_select)
 
   pickers
     .new({}, {
-      prompt_title = "Bookmarks",
+      prompt_title = "Anchors",
       finder = finders.new_table({
-        results = bookmarks,
+        results = anchors,
         entry_maker = make_entry,
       }),
       sorter = conf.generic_sorter({}),
@@ -50,10 +50,10 @@ function M.pick(bookmarks, opts, on_select)
             opts.on_delete(selection.value)
             -- Refresh picker
             local current_picker = action_state.get_current_picker(prompt_bufnr)
-            local new_bookmarks = opts.reload and opts.reload() or bookmarks
+            local new_anchors = opts.reload and opts.reload() or anchors
             current_picker:refresh(
               finders.new_table({
-                results = new_bookmarks,
+                results = new_anchors,
                 entry_maker = make_entry,
               }),
               { reset_prompt = false }
