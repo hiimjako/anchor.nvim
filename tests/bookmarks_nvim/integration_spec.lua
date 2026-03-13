@@ -273,8 +273,82 @@ describe("core operations", function()
 
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
       api.next_bookmark()
-      -- stays on same line, no wrap
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("prev_bookmark does not wrap when wrap is disabled", function()
+      config.setup({ data_dir = data_dir, keymaps = false, navigation = { wrap = false } })
+      local api = require("bookmarks_nvim")
+      add_bookmark(api, 4, "d")
+
+      vim.api.nvim_win_set_cursor(0, { 4, 0 })
+      api.prev_bookmark()
+      assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+  end)
+
+  describe("delete_all", function()
+    it("removes all bookmarks from current project", function()
+      local api = require("bookmarks_nvim")
+
+      local original_input = vim.ui.input
+      local count = 0
+      vim.ui.input = function(_, on_confirm)
+        count = count + 1
+        on_confirm("mark " .. count)
+      end
+
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.mark()
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      api.mark()
+      vim.ui.input = original_input
+
+      assert.equals(2, #store.load(proj_root))
+
+      api.delete_all()
+
+      assert.equals(0, #store.load(proj_root))
+    end)
+  end)
+
+  describe("multi-file bookmarking", function()
+    it("navigation stays within the current file", function()
+      local api = require("bookmarks_nvim")
+
+      -- Create a second file and bookmark it
+      local second_file = proj_root .. "/src/other.lua"
+      local f = io.open(second_file, "w")
+      f:write("local x = 1\nlocal y = 2\nlocal z = 3\n")
+      f:close()
+
+      vim.cmd("edit " .. second_file)
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("other file mark")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Go back to original file and add a bookmark
+      local test_file = proj_root .. "/src/main.lua"
+      vim.cmd("edit " .. test_file)
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("main mark")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- next_bookmark should stay in current file, not jump to other.lua
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.next_bookmark()
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+
+      -- Wrapping should also stay in current file
+      api.next_bookmark()
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
     end)
   end)
 

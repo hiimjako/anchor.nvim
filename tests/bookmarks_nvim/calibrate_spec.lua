@@ -44,4 +44,26 @@ describe("line drift detection", function()
     local new_line = calibrate.check(bm, lines)
     assert.equals(2, new_line)
   end)
+
+  it("when content drifted beyond search window, keeps original line", function()
+    local bm = Bookmark.new("mark", "f.lua", 5, 0, "target line")
+    -- Build 50 lines, put target at line 30 (25 lines away from original 5)
+    local lines = {}
+    for i = 1, 50 do
+      lines[i] = "filler " .. i
+    end
+    lines[30] = "target line"
+
+    local new_line = calibrate.check(bm, lines)
+    -- Should keep original because 30 is more than 20 lines from 5
+    assert.equals(5, new_line)
+  end)
+
+  it("tolerates leading/trailing whitespace differences", function()
+    local bm = Bookmark.new("mark", "f.lua", 2, 0, "  local x = 1  ")
+    local lines = { "other", "local x = 1", "more" }
+
+    local new_line = calibrate.check(bm, lines)
+    assert.equals(2, new_line)
+  end)
 end)
