@@ -22,7 +22,7 @@ Lua module name: `anchor_nvim`
 
 ```lua
 {
-  "hiimjako/anchor.nvim",
+  "hiimjako/bookmarks-nvim",
   event = "BufReadPost",
   keys = {
     { "<leader>am", function() require("anchor_nvim").mark() end, desc = "Mark/rename anchor" },
@@ -42,7 +42,7 @@ Lua module name: `anchor_nvim`
 
 ```lua
 use {
-  "hiimjako/anchor.nvim",
+  "hiimjako/bookmarks-nvim",
   config = function()
     require("anchor_nvim").setup({})
   end,
@@ -52,7 +52,7 @@ use {
 ### vim-plug
 
 ```vim
-Plug 'hiimjako/anchor.nvim'
+Plug 'hiimjako/bookmarks-nvim'
 lua require("anchor_nvim").setup({})
 ```
 
@@ -103,6 +103,7 @@ require("anchor_nvim").setup({
 | `:AnchorPrev`        | Jump to previous anchor in current file        |
 | `:AnchorListAll`     | Open picker with anchors from ALL projects     |
 | `:AnchorDeleteAll`   | Delete all anchors in current project          |
+| `:BookmarksNvimToQflist` | Send bookmarks to the quickfix list        |
 
 ## Picker Shortcuts
 
@@ -110,6 +111,32 @@ require("anchor_nvim").setup({
 - `<Esc>` close the picker
 - `<C-n>` / `<C-p>` move selection
 - `<C-d>` delete the selected anchor
+
+## which-key Integration
+
+The default keymaps set `desc` on every mapping, so [which-key.nvim](https://github.com/folke/which-key.nvim) picks them up automatically — no extra configuration needed.
+
+If you disable default keymaps (`keymaps = false`) and bind your own, just include a `desc` field:
+
+```lua
+vim.keymap.set("n", "<leader>bm", require("bookmarks_nvim").mark, { desc = "Mark/rename bookmark" })
+```
+
+## Quickfix Integration
+
+Push all project bookmarks into the quickfix list:
+
+```vim
+:BookmarksNvimToQflist
+```
+
+Or from Lua:
+
+```lua
+require("bookmarks_nvim").quickfix_list()
+```
+
+This lets you use standard quickfix workflows (`:cnext`, `:cprev`, `:cdo`) on your bookmarks.
 
 ## Statusline
 
