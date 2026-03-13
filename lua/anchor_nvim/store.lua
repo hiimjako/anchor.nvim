@@ -3,13 +3,15 @@ local project = require("anchor_nvim.project")
 
 local M = {}
 
+local cache = {}
+
 function M.get_store_path(project_root)
   local cfg = config.get()
   local id = project.project_id(project_root)
   return cfg.data_dir .. "/" .. id .. ".json"
 end
 
-function M.load(project_root)
+local function read_from_disk(project_root)
   local path = M.get_store_path(project_root)
   if vim.fn.filereadable(path) ~= 1 then
     return {}
@@ -29,6 +31,16 @@ function M.load(project_root)
   end
 
   return data.anchors or {}
+end
+
+function M.load(project_root)
+  if cache[project_root] then
+    return cache[project_root]
+  end
+
+  local anchors = read_from_disk(project_root)
+  cache[project_root] = anchors
+  return anchors
 end
 
 local function strip_internal_fields(anchors)
@@ -53,9 +65,11 @@ function M.save(project_root, anchors)
     vim.fn.mkdir(dir, "p")
   end
 
+  local clean_anchors = strip_internal_fields(anchors)
+
   local data = {
     project_root = project_root,
-    anchors = strip_internal_fields(anchors),
+    anchors = clean_anchors,
   }
 
   local json = vim.fn.json_encode(data)
@@ -68,6 +82,8 @@ function M.save(project_root, anchors)
 
   f:write(json)
   f:close()
+
+  cache[project_root] = clean_anchors
 end
 
 function M.load_all()
@@ -98,6 +114,10 @@ function M.load_all()
   end
 
   return all
+end
+
+function M.clear_cache()
+  cache = {}
 end
 
 return M

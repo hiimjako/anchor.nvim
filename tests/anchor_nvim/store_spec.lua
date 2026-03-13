@@ -7,6 +7,7 @@ describe("store", function()
 
   before_each(function()
     config.reset()
+    store.clear_cache()
     tmpdir = vim.fn.tempname()
     vim.fn.mkdir(tmpdir, "p")
     config.setup({ data_dir = tmpdir })
@@ -76,6 +77,43 @@ describe("store", function()
     assert.equals("proj1 mark", loaded1[1].name)
     assert.equals(1, #loaded2)
     assert.equals("proj2 mark", loaded2[1].name)
+  end)
+
+  it("repeated loads after save do not re-read from disk", function()
+    local bm = Anchor.new("cached", "f.lua", 1, 0, "x")
+    store.save("/cache/project", { bm })
+
+    -- First load
+    local loaded1 = store.load("/cache/project")
+    assert.equals(1, #loaded1)
+
+    -- Externally corrupt the file behind the store's back
+    local path = store.get_store_path("/cache/project")
+    local f = io.open(path, "w")
+    f:write("corrupted data {{{")
+    f:close()
+
+    -- Second load should still return valid data (from cache, not disk)
+    local loaded2 = store.load("/cache/project")
+    assert.equals(1, #loaded2)
+    assert.equals("cached", loaded2[1].name)
+  end)
+
+  it("save invalidates cache so next load reflects new data", function()
+    local bm1 = Anchor.new("first", "f.lua", 1, 0, "x")
+    store.save("/inv/project", { bm1 })
+
+    local loaded1 = store.load("/inv/project")
+    assert.equals("first", loaded1[1].name)
+
+    -- Save new data
+    local bm2 = Anchor.new("second", "g.lua", 2, 0, "y")
+    store.save("/inv/project", { bm2 })
+
+    -- Load should reflect the new save
+    local loaded2 = store.load("/inv/project")
+    assert.equals(1, #loaded2)
+    assert.equals("second", loaded2[1].name)
   end)
 
   describe("load_all", function()
