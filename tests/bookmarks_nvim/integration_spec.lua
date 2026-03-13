@@ -33,7 +33,15 @@ describe("core operations", function()
   end)
 
   after_each(function()
-    vim.cmd("bwipeout!")
+    -- Wipe all buffers from the test tmpdir
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(buf) then
+        local name = vim.api.nvim_buf_get_name(buf)
+        if name:find(tmpdir, 1, true) then
+          vim.cmd("silent! bwipeout! " .. buf)
+        end
+      end
+    end
     vim.fn.delete(tmpdir, "rf")
   end)
 
@@ -381,6 +389,42 @@ describe("core operations", function()
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
       -- Should return to normal mode, not leave user in insert mode
       assert.equals("n", vim.fn.mode())
+    end)
+
+    it("selecting a cross-file bookmark works when current buffer is modified", function()
+      local api = require("bookmarks_nvim")
+
+      -- Create a second file and bookmark it
+      local second_file = proj_root .. "/src/other.lua"
+      local f = io.open(second_file, "w")
+      f:write("local x = 1\nlocal y = 2\nlocal z = 3\n")
+      f:close()
+
+      vim.cmd("edit " .. second_file)
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("other mark")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Go back to main file and dirty it
+      local test_file = proj_root .. "/src/main.lua"
+      vim.cmd("edit " .. test_file)
+      vim.api.nvim_buf_set_lines(0, 0, 1, false, { "local changed = true" })
+      assert.is_true(vim.bo.modified)
+
+      -- Selecting the cross-file bookmark should not error
+      -- (confirm drop handles the modified buffer gracefully)
+      api.list_bookmarks()
+      local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
+      vim.api.nvim_feedkeys(keys, "x", false)
+
+      -- Should have jumped to the other file
+      local current_file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
+      assert.equals("other.lua", current_file)
+      assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
 
     it("returns to normal mode after selecting a bookmark", function()

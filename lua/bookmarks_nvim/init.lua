@@ -196,6 +196,9 @@ function M.list_bookmarks()
 
   local root = get_project_root()
   local bookmarks = store.load(root)
+  for _, bm in ipairs(bookmarks) do
+    bm._abs_path = root .. "/" .. bm.file
+  end
 
   picker.pick(bookmarks, {
     on_delete = function(bm)
@@ -209,12 +212,16 @@ function M.list_bookmarks()
       store.save(root, current)
     end,
     reload = function()
-      return store.load(root)
+      local current = store.load(root)
+      for _, bm in ipairs(current) do
+        bm._abs_path = root .. "/" .. bm.file
+      end
+      return current
     end,
   }, function(selected)
     local target = root .. "/" .. selected.file
-    if vim.api.nvim_buf_get_name(0) ~= target then
-      vim.cmd("drop " .. vim.fn.fnameescape(target))
+    if vim.fn.resolve(vim.api.nvim_buf_get_name(0)) ~= vim.fn.resolve(target) then
+      vim.cmd("confirm drop " .. vim.fn.fnameescape(target))
     end
     vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
   end)
@@ -222,12 +229,18 @@ end
 
 function M.list_all_bookmarks()
   local store = require("bookmarks_nvim.store")
+  local picker = require("bookmarks_nvim.picker")
   local builtin = require("bookmarks_nvim.picker.builtin")
 
   local all_bookmarks = store.load_all()
+  for _, bm in ipairs(all_bookmarks) do
+    if bm._project_root and bm.file then
+      bm._abs_path = bm._project_root .. "/" .. bm.file
+    end
+  end
 
   local format_fn = builtin.format_global_entry
-  builtin.pick(all_bookmarks, {
+  picker.pick(all_bookmarks, {
     format_entry = format_fn,
     on_delete = function(bm)
       if bm._project_root then
@@ -242,12 +255,18 @@ function M.list_all_bookmarks()
       end
     end,
     reload = function()
-      return store.load_all()
+      local current = store.load_all()
+      for _, bm in ipairs(current) do
+        if bm._project_root and bm.file then
+          bm._abs_path = bm._project_root .. "/" .. bm.file
+        end
+      end
+      return current
     end,
   }, function(selected)
     local target = (selected._project_root or "") .. "/" .. selected.file
-    if vim.api.nvim_buf_get_name(0) ~= target then
-      vim.cmd("drop " .. vim.fn.fnameescape(target))
+    if vim.fn.resolve(vim.api.nvim_buf_get_name(0)) ~= vim.fn.resolve(target) then
+      vim.cmd("confirm drop " .. vim.fn.fnameescape(target))
     end
     vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
   end)
