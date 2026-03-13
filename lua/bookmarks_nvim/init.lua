@@ -3,6 +3,38 @@ local M = {}
 function M.setup(opts)
   local config = require("bookmarks_nvim.config")
   config.setup(opts)
+
+  local sign = require("bookmarks_nvim.sign")
+  sign.setup()
+
+  local autocmd = require("bookmarks_nvim.autocmd")
+  autocmd.setup()
+
+  M._setup_keymaps()
+end
+
+function M._setup_keymaps()
+  local config = require("bookmarks_nvim.config")
+  local cfg = config.get()
+
+  if cfg.keymaps == false then
+    return
+  end
+
+  local maps = {
+    { key = cfg.keymaps.mark, fn = M.mark, desc = "Mark/rename bookmark" },
+    { key = cfg.keymaps.delete, fn = M.delete_mark, desc = "Delete bookmark" },
+    { key = cfg.keymaps.list, fn = M.list_bookmarks, desc = "List bookmarks" },
+    { key = cfg.keymaps.next, fn = M.next_bookmark, desc = "Next bookmark" },
+    { key = cfg.keymaps.prev, fn = M.prev_bookmark, desc = "Prev bookmark" },
+    { key = cfg.keymaps.delete_all, fn = M.delete_all, desc = "Delete all bookmarks" },
+  }
+
+  for _, map in ipairs(maps) do
+    if map.key and map.key ~= false then
+      vim.keymap.set("n", map.key, map.fn, { desc = map.desc })
+    end
+  end
 end
 
 local function get_project_root()
@@ -66,6 +98,7 @@ function M.mark()
     end
 
     store.save(root, bookmarks)
+    require("bookmarks_nvim.sign").refresh()
   end)
 end
 
@@ -85,6 +118,7 @@ function M.delete_mark()
 
   table.remove(bookmarks, idx)
   store.save(root, bookmarks)
+  require("bookmarks_nvim.sign").refresh()
 end
 
 function M.next_bookmark()
@@ -187,6 +221,25 @@ function M.delete_all()
   local store = require("bookmarks_nvim.store")
   local root = get_project_root()
   store.save(root, {})
+  require("bookmarks_nvim.sign").refresh()
+end
+
+function M.statusline()
+  local store = require("bookmarks_nvim.store")
+  local project = require("bookmarks_nvim.project")
+
+  local bufpath = vim.fn.expand("%:p:h")
+  local root = project.find_root(bufpath)
+  if not root then
+    return ""
+  end
+
+  local bookmarks = store.load(root)
+  if #bookmarks == 0 then
+    return ""
+  end
+
+  return "󰃁 " .. #bookmarks
 end
 
 return M

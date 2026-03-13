@@ -277,4 +277,31 @@ describe("core operations", function()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
   end)
+
+  describe("statusline", function()
+    it("returns empty string when no bookmarks in current project", function()
+      local api = require("bookmarks_nvim")
+      assert.equals("", api.statusline())
+    end)
+
+    it("returns bookmark count for current project", function()
+      local api = require("bookmarks_nvim")
+
+      local original_input = vim.ui.input
+      local call_count = 0
+      vim.ui.input = function(_, on_confirm)
+        call_count = call_count + 1
+        on_confirm("mark " .. call_count)
+      end
+
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.mark()
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      api.mark()
+
+      vim.ui.input = original_input
+
+      assert.equals("󰃁 2", api.statusline())
+    end)
+  end)
 end)
