@@ -102,6 +102,7 @@ function M.pick(anchors, opts, on_select)
   vim.api.nvim_buf_set_extmark(prompt_buf, prompt_ns, 0, 0, {
     virt_text = { { "> ", "Comment" } },
     virt_text_pos = "inline",
+    right_gravity = false,
   })
 
   local selected_idx = 1

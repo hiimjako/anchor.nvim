@@ -132,6 +132,37 @@ describe("picker navigation", function()
     assert.equals("first", selected.name)
   end)
 
+  it("prompt prefix > stays before typed text", function()
+    builtin.pick(anchors, {}, function() end)
+
+    -- Find the prompt buffer (the one with the AnchorPrompt extmark namespace)
+    local prompt_ns = vim.api.nvim_create_namespace("AnchorPrompt")
+    local prompt_buf = nil
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(buf) then
+        local marks = vim.api.nvim_buf_get_extmarks(buf, prompt_ns, 0, -1, {})
+        if #marks > 0 then
+          prompt_buf = buf
+          break
+        end
+      end
+    end
+    assert.is_not_nil(prompt_buf)
+
+    -- Type some text
+    feed("hello")
+
+    -- The extmark for "> " should still be at column 0 (before the typed text)
+    local marks = vim.api.nvim_buf_get_extmarks(prompt_buf, prompt_ns, 0, -1, { details = true })
+    assert.equals(1, #marks)
+    assert.equals(0, marks[1][3]) -- column 0: prefix stays at the start
+
+    -- Clean up: close picker and flush any pending on_lines callbacks
+    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+    vim.api.nvim_feedkeys(esc, "x", false)
+    vim.wait(10, function() return false end)
+  end)
+
   it("selected line has a visible highlight that moves with arrows", function()
     local ns = vim.api.nvim_create_namespace("AnchorPicker")
 
