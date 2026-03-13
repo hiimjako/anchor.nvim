@@ -273,10 +273,15 @@ function M.list_all_bookmarks()
 end
 
 function M.delete_all()
-  local store = require("bookmarks_nvim.store")
-  local root = get_project_root()
-  store.save(root, {})
-  require("bookmarks_nvim.sign").refresh()
+  vim.ui.select({ "Yes", "No" }, { prompt = "Delete all bookmarks in this project?" }, function(choice)
+    if choice ~= "Yes" then
+      return
+    end
+    local store = require("bookmarks_nvim.store")
+    local root = get_project_root()
+    store.save(root, {})
+    require("bookmarks_nvim.sign").refresh()
+  end)
 end
 
 function M.statusline()

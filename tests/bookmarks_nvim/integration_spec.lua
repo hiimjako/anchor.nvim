@@ -296,27 +296,50 @@ describe("core operations", function()
   end)
 
   describe("delete_all", function()
-    it("removes all bookmarks from current project", function()
-      local api = require("bookmarks_nvim")
-
+    local function add_marks(api, lines)
       local original_input = vim.ui.input
       local count = 0
       vim.ui.input = function(_, on_confirm)
         count = count + 1
         on_confirm("mark " .. count)
       end
-
-      vim.api.nvim_win_set_cursor(0, { 1, 0 })
-      api.mark()
-      vim.api.nvim_win_set_cursor(0, { 3, 0 })
-      api.mark()
+      for _, line in ipairs(lines) do
+        vim.api.nvim_win_set_cursor(0, { line, 0 })
+        api.mark()
+      end
       vim.ui.input = original_input
+    end
 
+    it("removes all bookmarks when user confirms", function()
+      local api = require("bookmarks_nvim")
+      add_marks(api, { 1, 3 })
       assert.equals(2, #store.load(proj_root))
+
+      local original_select = vim.ui.select
+      vim.ui.select = function(items, opts, on_choice)
+        on_choice("Yes")
+      end
 
       api.delete_all()
 
+      vim.ui.select = original_select
       assert.equals(0, #store.load(proj_root))
+    end)
+
+    it("keeps bookmarks when user cancels", function()
+      local api = require("bookmarks_nvim")
+      add_marks(api, { 1, 3 })
+      assert.equals(2, #store.load(proj_root))
+
+      local original_select = vim.ui.select
+      vim.ui.select = function(items, opts, on_choice)
+        on_choice("No")
+      end
+
+      api.delete_all()
+
+      vim.ui.select = original_select
+      assert.equals(2, #store.load(proj_root))
     end)
   end)
 
