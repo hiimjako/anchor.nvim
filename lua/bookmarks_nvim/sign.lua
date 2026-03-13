@@ -52,6 +52,13 @@ function M.refresh(bufnr)
         dirty = true
       end
 
+      -- Clamp to buffer bounds
+      local line_count = #buf_lines
+      if bm.line > line_count then
+        bm.line = line_count
+        dirty = true
+      end
+
       vim.fn.sign_place(0, sign_group, "BookmarksNvimMark", bufnr, { lnum = bm.line })
 
       vim.api.nvim_buf_set_extmark(bufnr, ns, bm.line - 1, 0, {

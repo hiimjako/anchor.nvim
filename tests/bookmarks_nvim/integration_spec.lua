@@ -407,6 +407,31 @@ describe("core operations", function()
     end)
   end)
 
+  describe("sign refresh", function()
+    it("does not crash when bookmark line exceeds buffer length", function()
+      local sign = require("bookmarks_nvim.sign")
+      local project = require("bookmarks_nvim.project")
+      sign.setup()
+
+      -- Get the root the same way sign.refresh resolves it
+      local bufpath = vim.api.nvim_buf_get_name(0)
+      local root = project.find_root(vim.fn.fnamemodify(bufpath, ":h"))
+
+      -- Save a bookmark at line 50, but the file only has 5 lines
+      local bm = Bookmark.new("far away", "src/main.lua", 50, 0, "deleted line")
+      store.save(root, { bm })
+
+      -- Should not throw an error
+      assert.has_no.errors(function()
+        sign.refresh()
+      end)
+
+      -- Bookmark should be clamped to last line
+      local bookmarks = store.load(root)
+      assert.equals(5, bookmarks[1].line)
+    end)
+  end)
+
   describe("statusline", function()
     it("returns empty string when no bookmarks in current project", function()
       local api = require("bookmarks_nvim")
