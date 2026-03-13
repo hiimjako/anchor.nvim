@@ -329,6 +329,34 @@ describe("core operations", function()
       api.prev_anchor()
       assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
     end)
+
+    it("next_anchor navigates to correct line after lines shift", function()
+      local api = require("anchor_nvim")
+      -- Anchor on line 3 which has "local c = 3"
+      add_anchor(api, 3, "mark c")
+
+      -- Insert a line at the top, pushing "local c = 3" to line 4
+      vim.api.nvim_buf_set_lines(0, 0, 0, false, { "-- new line at top" })
+
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.next_anchor()
+      -- Should jump to line 4 (where "local c = 3" now is), not stale line 3
+      assert.equals(4, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+
+    it("prev_anchor navigates to correct line after lines shift", function()
+      local api = require("anchor_nvim")
+      -- Anchor on line 2 which has "local b = 2"
+      add_anchor(api, 2, "mark b")
+
+      -- Insert a line at the top, pushing "local b = 2" to line 3
+      vim.api.nvim_buf_set_lines(0, 0, 0, false, { "-- new line at top" })
+
+      vim.api.nvim_win_set_cursor(0, { 6, 0 })
+      api.prev_anchor()
+      -- Should jump to line 3 (where "local b = 2" now is), not stale line 2
+      assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
+    end)
   end)
 
   describe("delete_all", function()

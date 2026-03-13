@@ -130,6 +130,19 @@ function M.delete_mark()
   require("anchor_nvim.sign").refresh()
 end
 
+local function calibrated_file_lines(anchors, rel_file, bufnr)
+  local calibrate = require("anchor_nvim.calibrate")
+  local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local file_lines = {}
+  for _, bm in ipairs(anchors) do
+    if bm.file == rel_file then
+      local calibrated = calibrate.check(bm, buf_lines)
+      table.insert(file_lines, calibrated)
+    end
+  end
+  return file_lines
+end
+
 function M.next_anchor()
   local config = require("anchor_nvim.config")
   local store = require("anchor_nvim.store")
@@ -139,12 +152,7 @@ function M.next_anchor()
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
 
   local anchors = store.load(root)
-  local file_lines = {}
-  for _, bm in ipairs(anchors) do
-    if bm.file == rel_file then
-      table.insert(file_lines, bm.line)
-    end
-  end
+  local file_lines = calibrated_file_lines(anchors, rel_file, 0)
 
   if #file_lines == 0 then
     return
@@ -173,12 +181,7 @@ function M.prev_anchor()
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
 
   local anchors = store.load(root)
-  local file_lines = {}
-  for _, bm in ipairs(anchors) do
-    if bm.file == rel_file then
-      table.insert(file_lines, bm.line)
-    end
-  end
+  local file_lines = calibrated_file_lines(anchors, rel_file, 0)
 
   if #file_lines == 0 then
     return
