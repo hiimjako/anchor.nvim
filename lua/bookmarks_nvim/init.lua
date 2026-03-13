@@ -287,6 +287,34 @@ function M.delete_all()
   end)
 end
 
+function M.cleanup()
+  local store = require("bookmarks_nvim.store")
+
+  local root = get_project_root()
+  local bookmarks = store.load(root)
+  local original_count = #bookmarks
+
+  local kept = {}
+  for _, bm in ipairs(bookmarks) do
+    local abs_path = root .. "/" .. bm.file
+    if vim.fn.filereadable(abs_path) == 1 then
+      local lines = vim.fn.readfile(abs_path)
+      if bm.line <= #lines then
+        table.insert(kept, bm)
+      end
+    end
+  end
+
+  store.save(root, kept)
+
+  local removed = original_count - #kept
+  if removed > 0 then
+    require("bookmarks_nvim.sign").refresh()
+  end
+
+  return removed
+end
+
 function M.quickfix_list()
   local store = require("bookmarks_nvim.store")
 

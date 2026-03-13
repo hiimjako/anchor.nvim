@@ -38,3 +38,8 @@ end)
 cmd("BookmarksNvimToQflist", function()
   require("bookmarks_nvim").quickfix_list()
 end)
+
+cmd("BookmarksNvimCleanup", function()
+  local removed = require("bookmarks_nvim").cleanup()
+  vim.notify("bookmarks_nvim: removed " .. removed .. " stale bookmark(s)", vim.log.levels.INFO)
+end)

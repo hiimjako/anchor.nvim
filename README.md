@@ -104,6 +104,7 @@ require("anchor_nvim").setup({
 | `:AnchorListAll`     | Open picker with anchors from ALL projects     |
 | `:AnchorDeleteAll`   | Delete all anchors in current project          |
 | `:BookmarksNvimToQflist` | Send bookmarks to the quickfix list        |
+| `:BookmarksNvimCleanup`  | Remove stale bookmarks (deleted files/lines)|
 
 ## Picker Shortcuts
 

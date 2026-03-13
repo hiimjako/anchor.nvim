@@ -663,6 +663,124 @@ describe("core operations", function()
     end)
   end)
 
+  describe("cleanup", function()
+    it("removes bookmarks pointing to deleted files", function()
+      local api = require("bookmarks_nvim")
+
+      -- Create a file, bookmark it, then delete the file
+      local temp_file = proj_root .. "/src/gone.lua"
+      local f = io.open(temp_file, "w")
+      f:write("local gone = true\n")
+      f:close()
+
+      vim.cmd("edit " .. temp_file)
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("doomed")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Also bookmark the main file
+      vim.cmd("edit " .. proj_root .. "/src/main.lua")
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("keeper")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      assert.equals(2, #store.load(proj_root))
+
+      -- Delete the file
+      os.remove(temp_file)
+
+      api.cleanup()
+
+      local bookmarks = store.load(proj_root)
+      assert.equals(1, #bookmarks)
+      assert.equals("keeper", bookmarks[1].name)
+    end)
+
+    it("removes bookmarks whose line exceeds file length", function()
+      local api = require("bookmarks_nvim")
+
+      -- Bookmark line 5
+      vim.api.nvim_win_set_cursor(0, { 5, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("bottom")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Bookmark line 1
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("top")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      assert.equals(2, #store.load(proj_root))
+
+      -- Truncate the file to 2 lines
+      local test_file = proj_root .. "/src/main.lua"
+      local fh = io.open(test_file, "w")
+      fh:write("local a = 1\nlocal b = 2\n")
+      fh:close()
+
+      api.cleanup()
+
+      local bookmarks = store.load(proj_root)
+      assert.equals(1, #bookmarks)
+      assert.equals("top", bookmarks[1].name)
+    end)
+
+    it("keeps all bookmarks when everything is valid", function()
+      local api = require("bookmarks_nvim")
+
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("valid")
+      end
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.mark()
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      api.mark()
+      vim.ui.input = original_input
+
+      api.cleanup()
+
+      assert.equals(2, #store.load(proj_root))
+    end)
+
+    it("returns the count of removed bookmarks", function()
+      local api = require("bookmarks_nvim")
+
+      -- Bookmark a file that will be deleted
+      local temp_file = proj_root .. "/src/gone.lua"
+      local f = io.open(temp_file, "w")
+      f:write("local gone = true\n")
+      f:close()
+
+      vim.cmd("edit " .. temp_file)
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("doomed")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      os.remove(temp_file)
+
+      local removed = api.cleanup()
+      assert.equals(1, removed)
+    end)
+  end)
+
   describe("statusline", function()
     it("returns empty string when no bookmarks in current project", function()
       local api = require("bookmarks_nvim")
