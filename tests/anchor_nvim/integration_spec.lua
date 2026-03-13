@@ -661,6 +661,23 @@ describe("core operations", function()
       assert.equals("first", anchors[1].name)
       assert.equals("second", anchors[2].name)
     end)
+
+    it("reordering does not save internal fields like _abs_path to disk", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "first")
+      add_anchor(api, 2, "second")
+
+      api.list_anchors()
+      feed("<C-j><Esc>")
+
+      -- Read the raw JSON from disk to check for internal field pollution
+      local store_path = store.get_store_path(proj_root)
+      local f = io.open(store_path, "r")
+      local raw_json = f:read("*a")
+      f:close()
+
+      assert.is_nil(raw_json:find("_abs_path"), "internal _abs_path field should not be persisted to disk")
+    end)
   end)
 
   describe("cleanup", function()

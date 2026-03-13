@@ -31,6 +31,20 @@ function M.load(project_root)
   return data.anchors or {}
 end
 
+local function strip_internal_fields(anchors)
+  local clean = {}
+  for _, bm in ipairs(anchors) do
+    local entry = {}
+    for k, v in pairs(bm) do
+      if k:sub(1, 1) ~= "_" then
+        entry[k] = v
+      end
+    end
+    table.insert(clean, entry)
+  end
+  return clean
+end
+
 function M.save(project_root, anchors)
   local path = M.get_store_path(project_root)
   local dir = vim.fn.fnamemodify(path, ":h")
@@ -41,7 +55,7 @@ function M.save(project_root, anchors)
 
   local data = {
     project_root = project_root,
-    anchors = anchors,
+    anchors = strip_internal_fields(anchors),
   }
 
   local json = vim.fn.json_encode(data)
