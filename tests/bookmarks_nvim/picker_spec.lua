@@ -39,6 +39,12 @@ describe("picker filtering", function()
     assert.equals(3, #results)
   end)
 
+  it("extract_query returns empty string for a fresh prompt line", function()
+    assert.equals("", builtin.extract_query("> "))
+    assert.equals("hello", builtin.extract_query("> hello"))
+    assert.equals("", builtin.extract_query(""))
+  end)
+
   it("returns empty list when nothing matches", function()
     local results = builtin.filter_bookmarks(bookmarks, "zzz_nonexistent")
     assert.equals(0, #results)

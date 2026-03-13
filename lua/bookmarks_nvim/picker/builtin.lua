@@ -22,6 +22,10 @@ function M.filter_bookmarks(bookmarks, query)
   return results
 end
 
+function M.extract_query(line)
+  return (line or ""):gsub("^> ", "")
+end
+
 function M.format_entry(bookmark)
   return string.format("%s | %s:%d | %s", bookmark.name, bookmark.file, bookmark.line, vim.trim(bookmark.content or ""))
 end
@@ -62,6 +66,7 @@ function M.pick(bookmarks, opts, on_select)
   local prompt_buf = vim.api.nvim_create_buf(false, true)
   vim.bo[prompt_buf].bufhidden = "wipe"
   vim.bo[prompt_buf].buftype = "prompt"
+  vim.fn.prompt_setprompt(prompt_buf, "> ")
 
   -- Open results window
   local results_win = vim.api.nvim_open_win(results_buf, false, {
@@ -136,7 +141,7 @@ function M.pick(bookmarks, opts, on_select)
       opts.on_delete(selected)
       -- Re-filter after deletion
       local query_lines = vim.api.nvim_buf_get_lines(prompt_buf, 0, -1, false)
-      local query = (query_lines[1] or ""):gsub("^> ", "")
+      local query = M.extract_query(query_lines[1])
       -- Reload bookmarks from opts source
       if opts.reload then
         bookmarks = opts.reload()
@@ -158,19 +163,24 @@ function M.pick(bookmarks, opts, on_select)
     close()
   end, keymap_opts)
 
-  vim.keymap.set("i", "<C-n>", function()
+  local function move_down()
     if selected_idx < #filtered then
       selected_idx = selected_idx + 1
       render()
     end
-  end, keymap_opts)
+  end
 
-  vim.keymap.set("i", "<C-p>", function()
+  local function move_up()
     if selected_idx > 1 then
       selected_idx = selected_idx - 1
       render()
     end
-  end, keymap_opts)
+  end
+
+  vim.keymap.set("i", "<C-n>", move_down, keymap_opts)
+  vim.keymap.set("i", "<Down>", move_down, keymap_opts)
+  vim.keymap.set("i", "<C-p>", move_up, keymap_opts)
+  vim.keymap.set("i", "<Up>", move_up, keymap_opts)
 
   vim.keymap.set("i", "<C-d>", function()
     delete_current()
@@ -184,7 +194,7 @@ function M.pick(bookmarks, opts, on_select)
           return
         end
         local lines = vim.api.nvim_buf_get_lines(prompt_buf, 0, -1, false)
-        local query = (lines[1] or ""):gsub("^> ", "")
+        local query = M.extract_query(lines[1])
         filtered = M.filter_bookmarks(bookmarks, query)
         selected_idx = 1
         render()
