@@ -1,6 +1,6 @@
 local M = {}
 
-function M.fuzzy_match(query, text)
+function M.substring_match(query, text)
   if query == "" then
     return true
   end
@@ -15,7 +15,7 @@ function M.filter_bookmarks(bookmarks, query)
   local results = {}
   for _, bm in ipairs(bookmarks) do
     local searchable = bm.name .. " " .. bm.file .. " " .. (bm.content or "") .. " " .. (bm._project_root or "")
-    if M.fuzzy_match(query, searchable) then
+    if M.substring_match(query, searchable) then
       table.insert(results, bm)
     end
   end
