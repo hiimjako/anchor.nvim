@@ -89,16 +89,24 @@ function M.mark()
       return
     end
 
+    -- Re-load from disk to avoid overwriting concurrent changes (e.g. calibration)
+    local fresh_anchors = store.load(root)
+
     if existing then
-      anchors[idx].name = name
-      anchors[idx].updated_at = os.time()
+      for _, bm in ipairs(fresh_anchors) do
+        if bm.id == existing.id then
+          bm.name = name
+          bm.updated_at = os.time()
+          break
+        end
+      end
     else
       local content = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1] or ""
       local bm = Anchor.new(name, rel_file, line, col, content)
-      table.insert(anchors, bm)
+      table.insert(fresh_anchors, bm)
     end
 
-    store.save(root, anchors)
+    store.save(root, fresh_anchors)
     require("anchor_nvim.sign").refresh()
   end)
 end

@@ -146,6 +146,40 @@ describe("core operations", function()
       assert.equals(0, #anchors)
     end)
 
+    it("does not overwrite concurrent changes made while input prompt is open", function()
+      local api = require("anchor_nvim")
+
+      -- Create an existing anchor on line 1
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("existing")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Now mark line 3, but simulate concurrent modification during input
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      vim.ui.input = function(_, on_confirm)
+        -- While the prompt is "open", another subsystem updates the store
+        -- (e.g. calibration moves the existing anchor from line 1 to line 2)
+        local current = store.load(proj_root)
+        current[1].line = 2
+        store.save(proj_root, current)
+
+        -- Then the user confirms
+        on_confirm("new anchor")
+      end
+
+      api.mark()
+      vim.ui.input = original_input
+
+      local anchors = store.load(proj_root)
+      assert.equals(2, #anchors)
+      -- The concurrent line update should NOT be lost
+      assert.equals(2, anchors[1].line)
+    end)
+
     it("anchors persist after save and reload", function()
       local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
