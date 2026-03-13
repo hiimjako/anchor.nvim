@@ -11,7 +11,7 @@ function M.find_root(start_path)
 
   local cfg = config.get()
   local markers = cfg.root_markers
-  local home = vim.loop.os_homedir() or os.getenv("HOME") or ""
+  local home = vim.uv.os_homedir() or os.getenv("HOME") or ""
 
   local dir = start_path
   while dir and dir ~= "" and dir ~= home do
