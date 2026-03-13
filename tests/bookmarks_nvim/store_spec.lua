@@ -77,4 +77,45 @@ describe("store", function()
     assert.equals(1, #loaded2)
     assert.equals("proj2 mark", loaded2[1].name)
   end)
+
+  describe("load_all", function()
+    it("returns bookmarks from multiple projects with project_root attached", function()
+      local bm1 = Bookmark.new("mark a", "a.lua", 1, 0, "a")
+      local bm2 = Bookmark.new("mark b", "b.lua", 2, 0, "b")
+
+      store.save("/project/alpha", { bm1 })
+      store.save("/project/beta", { bm2 })
+
+      local all = store.load_all()
+      assert.equals(2, #all)
+
+      -- Each bookmark should have a _project_root field
+      local roots = {}
+      for _, bm in ipairs(all) do
+        roots[bm._project_root] = true
+      end
+      assert.is_true(roots["/project/alpha"])
+      assert.is_true(roots["/project/beta"])
+    end)
+
+    it("returns empty list when no projects have bookmarks", function()
+      local all = store.load_all()
+      assert.same({}, all)
+    end)
+
+    it("skips corrupt files gracefully", function()
+      local bm = Bookmark.new("good", "g.lua", 1, 0, "x")
+      store.save("/project/good", { bm })
+
+      -- Write a corrupt file
+      local corrupt_path = tmpdir .. "/corrupt.json"
+      local f = io.open(corrupt_path, "w")
+      f:write("bad json {{{")
+      f:close()
+
+      local all = store.load_all()
+      assert.equals(1, #all)
+      assert.equals("good", all[1].name)
+    end)
+  end)
 end)

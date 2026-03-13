@@ -30,3 +30,7 @@ end)
 cmd("BookmarksNvimDeleteAll", function()
   require("bookmarks_nvim").delete_all()
 end)
+
+cmd("BookmarksNvimListAll", function()
+  require("bookmarks_nvim").list_all_bookmarks()
+end)

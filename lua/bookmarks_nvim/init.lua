@@ -28,6 +28,7 @@ function M._setup_keymaps()
     { key = cfg.keymaps.next, fn = M.next_bookmark, desc = "Next bookmark" },
     { key = cfg.keymaps.prev, fn = M.prev_bookmark, desc = "Prev bookmark" },
     { key = cfg.keymaps.delete_all, fn = M.delete_all, desc = "Delete all bookmarks" },
+    { key = cfg.keymaps.list_all, fn = M.list_all_bookmarks, desc = "List all bookmarks" },
   }
 
   for _, map in ipairs(maps) do
@@ -212,6 +213,37 @@ function M.list_bookmarks()
     end,
   }, function(selected)
     local target = root .. "/" .. selected.file
+    vim.cmd("edit " .. vim.fn.fnameescape(target))
+    vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
+  end)
+end
+
+function M.list_all_bookmarks()
+  local store = require("bookmarks_nvim.store")
+  local builtin = require("bookmarks_nvim.picker.builtin")
+
+  local all_bookmarks = store.load_all()
+
+  local format_fn = builtin.format_global_entry
+  builtin.pick(all_bookmarks, {
+    format_entry = format_fn,
+    on_delete = function(bm)
+      if bm._project_root then
+        local current = store.load(bm._project_root)
+        for i, b in ipairs(current) do
+          if b.id == bm.id then
+            table.remove(current, i)
+            break
+          end
+        end
+        store.save(bm._project_root, current)
+      end
+    end,
+    reload = function()
+      return store.load_all()
+    end,
+  }, function(selected)
+    local target = (selected._project_root or "") .. "/" .. selected.file
     vim.cmd("edit " .. vim.fn.fnameescape(target))
     vim.api.nvim_win_set_cursor(0, { selected.line, selected.col })
   end)

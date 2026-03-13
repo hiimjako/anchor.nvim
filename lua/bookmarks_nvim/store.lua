@@ -56,4 +56,34 @@ function M.save(project_root, bookmarks)
   f:close()
 end
 
+function M.load_all()
+  local cfg = config.get()
+  local dir = cfg.data_dir
+
+  if vim.fn.isdirectory(dir) ~= 1 then
+    return {}
+  end
+
+  local files = vim.fn.glob(dir .. "/*.json", false, true)
+  local all = {}
+
+  for _, path in ipairs(files) do
+    local f = io.open(path, "r")
+    if f then
+      local content = f:read("*a")
+      f:close()
+      local ok, data = pcall(vim.fn.json_decode, content)
+      if ok and type(data) == "table" and data.bookmarks then
+        local root = data.project_root or ""
+        for _, bm in ipairs(data.bookmarks) do
+          bm._project_root = root
+          table.insert(all, bm)
+        end
+      end
+    end
+  end
+
+  return all
+end
+
 return M

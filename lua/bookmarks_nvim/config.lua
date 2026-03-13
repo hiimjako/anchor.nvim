@@ -26,6 +26,7 @@ local defaults = {
     next = "<leader>bn",
     prev = "<leader>bp",
     delete_all = "<leader>bx",
+    list_all = "<leader>ba",
   },
 }
 

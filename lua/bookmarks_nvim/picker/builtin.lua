@@ -14,7 +14,7 @@ function M.filter_bookmarks(bookmarks, query)
 
   local results = {}
   for _, bm in ipairs(bookmarks) do
-    local searchable = bm.name .. " " .. bm.file .. " " .. (bm.content or "")
+    local searchable = bm.name .. " " .. bm.file .. " " .. (bm.content or "") .. " " .. (bm._project_root or "")
     if M.fuzzy_match(query, searchable) then
       table.insert(results, bm)
     end
@@ -24,6 +24,18 @@ end
 
 function M.format_entry(bookmark)
   return string.format("%s | %s:%d | %s", bookmark.name, bookmark.file, bookmark.line, vim.trim(bookmark.content or ""))
+end
+
+function M.format_global_entry(bookmark)
+  local project_name = vim.fn.fnamemodify(bookmark._project_root or "", ":t")
+  return string.format(
+    "%s | %s/%s:%d | %s",
+    bookmark.name,
+    project_name,
+    bookmark.file,
+    bookmark.line,
+    vim.trim(bookmark.content or "")
+  )
 end
 
 function M.pick(bookmarks, opts, on_select)
@@ -80,11 +92,12 @@ function M.pick(bookmarks, opts, on_select)
   local ns = vim.api.nvim_create_namespace("BookmarksNvimPicker")
   local selected_idx = 1
   local filtered = bookmarks
+  local entry_formatter = opts.format_entry or M.format_entry
 
   local function render()
     local lines = {}
     for _, bm in ipairs(filtered) do
-      table.insert(lines, M.format_entry(bm))
+      table.insert(lines, entry_formatter(bm))
     end
     vim.api.nvim_buf_set_lines(results_buf, 0, -1, false, lines)
 

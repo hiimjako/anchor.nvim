@@ -51,4 +51,24 @@ describe("picker filtering", function()
     assert.is_truthy(entry:find("src/main.lua"))
     assert.is_truthy(entry:find("10"))
   end)
+
+  it("format_global_entry shows project folder name in the path", function()
+    local bm = bookmarks[1]
+    bm._project_root = "/Users/jako/my-app"
+    local entry = builtin.format_global_entry(bm)
+    assert.is_string(entry)
+    assert.is_truthy(entry:find("my%-app"))
+    assert.is_truthy(entry:find("src/main.lua"))
+    assert.is_truthy(entry:find("todo fix"))
+  end)
+
+  it("filter_bookmarks also searches project root for global entries", function()
+    bookmarks[1]._project_root = "/Users/jako/my-app"
+    bookmarks[2]._project_root = "/Users/jako/backend"
+    bookmarks[3]._project_root = "/Users/jako/backend"
+
+    local results = builtin.filter_bookmarks(bookmarks, "my-app")
+    assert.equals(1, #results)
+    assert.equals("todo fix", results[1].name)
+  end)
 end)
