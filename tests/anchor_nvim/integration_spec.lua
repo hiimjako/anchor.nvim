@@ -47,6 +47,21 @@ describe("core operations", function()
     vim.fn.delete(tmpdir, "rf")
   end)
 
+  local function add_anchor(api, line, name)
+    vim.api.nvim_win_set_cursor(0, { line, 0 })
+    local original_input = vim.ui.input
+    vim.ui.input = function(_, on_confirm)
+      on_confirm(name)
+    end
+    api.mark()
+    vim.ui.input = original_input
+  end
+
+  local function feed(keystr)
+    local keys = vim.api.nvim_replace_termcodes("i" .. keystr, true, false, true)
+    vim.api.nvim_feedkeys(keys, "x", false)
+  end
+
   describe("mark (upsert)", function()
     it("on an unmarked line creates an anchor", function()
       local api = require("anchor_nvim")
@@ -319,16 +334,6 @@ describe("core operations", function()
   end)
 
   describe("navigation", function()
-    local function add_anchor(api, line, name)
-      vim.api.nvim_win_set_cursor(0, { line, 0 })
-      local original_input = vim.ui.input
-      vim.ui.input = function(_, on_confirm)
-        on_confirm(name)
-      end
-      api.mark()
-      vim.ui.input = original_input
-    end
-
     it("next_anchor moves cursor to the next anchored line", function()
       local api = require("anchor_nvim")
       add_anchor(api, 2, "b")
@@ -548,8 +553,7 @@ describe("core operations", function()
 
       -- Open the list picker and select the anchor
       api.list_anchors()
-      local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
-      vim.api.nvim_feedkeys(keys, "x", false)
+      feed("<CR>")
 
       -- Should jump to the anchored line without error
       assert.equals(3, vim.api.nvim_win_get_cursor(0)[1])
@@ -584,8 +588,7 @@ describe("core operations", function()
       -- Selecting the cross-file anchor should not error
       -- (confirm drop handles the modified buffer gracefully)
       api.list_anchors()
-      local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
-      vim.api.nvim_feedkeys(keys, "x", false)
+      feed("<CR>")
 
       -- Should have jumped to the other file
       local current_file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
@@ -609,8 +612,7 @@ describe("core operations", function()
       -- Open picker (enters insert mode internally)
       api.list_anchors()
       -- Simulate: enter insert mode then press CR to select
-      local keys = vim.api.nvim_replace_termcodes("i<CR>", true, false, true)
-      vim.api.nvim_feedkeys(keys, "x", false)
+      feed("<CR>")
 
       -- Must be back in normal mode
       assert.equals("n", vim.fn.mode())
@@ -632,8 +634,7 @@ describe("core operations", function()
 
       -- list_anchors should not pollute cached objects
       api.list_anchors()
-      local keys = vim.api.nvim_replace_termcodes("i<Esc>", true, false, true)
-      vim.api.nvim_feedkeys(keys, "x", false)
+      feed("<Esc>")
 
       local after = store.load(proj_root)
       assert.is_nil(after[1]._abs_path)
@@ -695,16 +696,6 @@ describe("core operations", function()
   end)
 
   describe("quickfix_list", function()
-    local function add_anchor(api, line, name)
-      vim.api.nvim_win_set_cursor(0, { line, 0 })
-      local original_input = vim.ui.input
-      vim.ui.input = function(_, on_confirm)
-        on_confirm(name)
-      end
-      api.mark()
-      vim.ui.input = original_input
-    end
-
     it("populates quickfix list with current project anchors", function()
       local api = require("anchor_nvim")
       add_anchor(api, 2, "second line")
@@ -801,21 +792,6 @@ describe("core operations", function()
   end)
 
   describe("anchor reordering", function()
-    local function add_anchor(api, line, name)
-      vim.api.nvim_win_set_cursor(0, { line, 0 })
-      local original_input = vim.ui.input
-      vim.ui.input = function(_, on_confirm)
-        on_confirm(name)
-      end
-      api.mark()
-      vim.ui.input = original_input
-    end
-
-    local function feed(keystr)
-      local keys = vim.api.nvim_replace_termcodes("i" .. keystr, true, false, true)
-      vim.api.nvim_feedkeys(keys, "x", false)
-    end
-
     it("C-j moves the selected anchor down and persists the order", function()
       local api = require("anchor_nvim")
       add_anchor(api, 1, "first")

@@ -232,14 +232,13 @@ function M.list_anchors()
   local store = require("anchor_nvim.store")
   local picker = require("anchor_nvim.picker")
 
+  local Anchor = require("anchor_nvim.anchor")
+
   local root = get_project_root()
   local raw = store.load(root)
   local anchors = {}
   for _, bm in ipairs(raw) do
-    local copy = {}
-    for k, v in pairs(bm) do
-      copy[k] = v
-    end
+    local copy = Anchor.copy(bm)
     copy._abs_path = root .. "/" .. bm.file
     table.insert(anchors, copy)
   end

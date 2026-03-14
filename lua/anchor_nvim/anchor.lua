@@ -17,6 +17,14 @@ function M.new(name, file, line, col, content)
   }
 end
 
+function M.copy(bm)
+  local c = {}
+  for k, v in pairs(bm) do
+    c[k] = v
+  end
+  return c
+end
+
 function M.matches_location(bm, file, line)
   return bm.file == file and bm.line == line
 end

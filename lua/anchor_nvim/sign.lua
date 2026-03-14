@@ -44,12 +44,10 @@ function M.refresh(bufnr)
   local dirty = false
 
   -- Work on a shallow copy so we never mutate cached objects
+  local Anchor = require("anchor_nvim.anchor")
   local working = {}
   for i, bm in ipairs(anchors) do
-    working[i] = {}
-    for k, v in pairs(bm) do
-      working[i][k] = v
-    end
+    working[i] = Anchor.copy(bm)
   end
 
   for _, bm in ipairs(working) do
