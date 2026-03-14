@@ -146,6 +146,49 @@ describe("core operations", function()
       assert.equals(0, #anchors)
     end)
 
+    it("does not create anchor when name is empty", function()
+      local api = require("anchor_nvim")
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("")
+      end
+
+      api.mark()
+
+      vim.ui.input = original_input
+
+      local anchors = store.load(proj_root)
+      assert.equals(0, #anchors)
+    end)
+
+    it("deletes existing anchor when name is cleared to empty", function()
+      local api = require("anchor_nvim")
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+
+      local call_count = 0
+      local original_input = vim.ui.input
+      vim.ui.input = function(opts, on_confirm)
+        call_count = call_count + 1
+        if call_count == 1 then
+          on_confirm("to be deleted")
+        else
+          on_confirm("")
+        end
+      end
+
+      api.mark()
+      assert.equals(1, #store.load(proj_root))
+
+      api.mark()
+
+      vim.ui.input = original_input
+
+      local anchors = store.load(proj_root)
+      assert.equals(0, #anchors)
+    end)
+
     it("does not overwrite concurrent changes made while input prompt is open", function()
       local api = require("anchor_nvim")
 

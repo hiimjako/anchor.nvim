@@ -92,6 +92,21 @@ function M.mark()
     -- Re-load from disk to avoid overwriting concurrent changes (e.g. calibration)
     local fresh_anchors = store.load(root)
 
+    if name == "" then
+      -- Empty name on existing anchor = delete; on new line = no-op
+      if existing then
+        for i, bm in ipairs(fresh_anchors) do
+          if bm.id == existing.id then
+            table.remove(fresh_anchors, i)
+            break
+          end
+        end
+        store.save(root, fresh_anchors)
+        require("anchor_nvim.sign").refresh()
+      end
+      return
+    end
+
     if existing then
       for _, bm in ipairs(fresh_anchors) do
         if bm.id == existing.id then
