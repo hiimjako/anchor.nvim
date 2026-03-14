@@ -160,7 +160,9 @@ describe("picker navigation", function()
     -- Clean up: close picker and flush any pending on_lines callbacks
     local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
     vim.api.nvim_feedkeys(esc, "x", false)
-    vim.wait(10, function() return false end)
+    vim.wait(10, function()
+      return false
+    end)
   end)
 
   it("selected line has a visible highlight that moves with arrows", function()
