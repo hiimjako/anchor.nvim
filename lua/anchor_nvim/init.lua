@@ -363,8 +363,9 @@ function M.quickfix_list()
     return
   end
 
-  -- Sort by file, then line
-  table.sort(anchors, function(a, b)
+  -- Sort a copy so we don't mutate the cached order
+  local sorted = { unpack(anchors) }
+  table.sort(sorted, function(a, b)
     if a.file ~= b.file then
       return a.file < b.file
     end
@@ -372,7 +373,7 @@ function M.quickfix_list()
   end)
 
   local items = {}
-  for _, bm in ipairs(anchors) do
+  for _, bm in ipairs(sorted) do
     table.insert(items, {
       filename = root .. "/" .. bm.file,
       lnum = bm.line,

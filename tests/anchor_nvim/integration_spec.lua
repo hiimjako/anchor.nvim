@@ -690,6 +690,25 @@ describe("core operations", function()
       assert.equals(4, qflist[2].lnum)
       assert.equals(2, qflist[3].lnum)
     end)
+
+    it("does not mutate the stored anchor order", function()
+      local api = require("anchor_nvim")
+
+      -- Add anchors in a specific user-chosen order: line 4 first, then line 1
+      add_anchor(api, 4, "fourth")
+      add_anchor(api, 1, "first")
+
+      local before = store.load(proj_root)
+      assert.equals("fourth", before[1].name)
+      assert.equals("first", before[2].name)
+
+      api.quickfix_list()
+
+      -- The cached order should be preserved (user's order), not sorted
+      local after = store.load(proj_root)
+      assert.equals("fourth", after[1].name)
+      assert.equals("first", after[2].name)
+    end)
   end)
 
   describe("anchor reordering", function()
