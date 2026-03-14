@@ -145,7 +145,7 @@ function M.delete_mark()
   local rel_file = get_relative_path(root)
   local line = vim.api.nvim_win_get_cursor(0)[1]
 
-  local anchors = store.load(root)
+  local anchors = store.load(root, { force = true })
   local _, idx = find_anchor_at_cursor(anchors, rel_file, line)
 
   if not idx then

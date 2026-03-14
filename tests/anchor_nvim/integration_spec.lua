@@ -262,6 +262,43 @@ describe("core operations", function()
       assert.equals(0, #store.load(proj_root))
     end)
 
+    it("does not discard concurrent disk changes when deleting", function()
+      local api = require("anchor_nvim")
+
+      -- Create two anchors
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("first")
+      end
+      api.mark()
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("second")
+      end
+      vim.api.nvim_win_set_cursor(0, { 3, 0 })
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Modify the JSON file directly (bypassing cache) to simulate external change
+      local store_path = store.get_store_path(proj_root)
+      local f = io.open(store_path, "r")
+      local raw = f:read("*a")
+      f:close()
+      raw = raw:gsub('"second"', '"modified-on-disk"')
+      f = io.open(store_path, "w")
+      f:write(raw)
+      f:close()
+
+      -- Delete the first anchor — should re-read from disk first
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      api.delete_mark()
+
+      local anchors = store.load(proj_root, { force = true })
+      assert.equals(1, #anchors)
+      -- The on-disk rename should be preserved, not overwritten by stale cache
+      assert.equals("modified-on-disk", anchors[1].name)
+    end)
+
     it("does nothing when cursor is not on an anchored line", function()
       local api = require("anchor_nvim")
       vim.api.nvim_win_set_cursor(0, { 2, 0 })
