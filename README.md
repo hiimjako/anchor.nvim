@@ -30,6 +30,8 @@ Lua module name: `anchor_nvim`
     { "<leader>ml", function() require("anchor_nvim").list_anchors() end, desc = "List anchors" },
     { "<leader>mn", function() require("anchor_nvim").next_anchor() end, desc = "Next anchor" },
     { "<leader>mp", function() require("anchor_nvim").prev_anchor() end, desc = "Prev anchor" },
+    { "<leader>ma", function() require("anchor_nvim").list_all_anchors() end, desc = "List all anchors" },
+    { "<leader>mx", function() require("anchor_nvim").delete_all() end, desc = "Delete all anchors" },
   },
   opts = {},
   config = function(_, opts)
@@ -94,25 +96,28 @@ require("anchor_nvim").setup({
 
 ## Commands
 
-| Command              | Description                                   |
-| -------------------- | --------------------------------------------- |
-| `:AnchorMark`        | Create anchor or rename existing one at cursor |
-| `:AnchorDelete`      | Delete anchor at cursor line                   |
-| `:AnchorList`        | Open picker with project anchors               |
-| `:AnchorNext`        | Jump to next anchor in current file            |
-| `:AnchorPrev`        | Jump to previous anchor in current file        |
-| `:AnchorListAll`     | Open picker with anchors from ALL projects     |
-| `:AnchorDeleteAll`   | Delete all anchors in current project          |
+| Command            | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `:AnchorMark`      | Create anchor or rename existing one at cursor |
+| `:AnchorDelete`    | Delete anchor at cursor line                   |
+| `:AnchorList`      | Open picker with project anchors               |
+| `:AnchorNext`      | Jump to next anchor in current file            |
+| `:AnchorPrev`      | Jump to previous anchor in current file        |
+| `:AnchorListAll`   | Open picker with anchors from ALL projects     |
+| `:AnchorDeleteAll` | Delete all anchors in current project          |
 | `:AnchorToQflist`  | Send anchors to the quickfix list              |
 | `:AnchorCleanup`   | Remove stale anchors (deleted files/lines)     |
 
 ## Picker Shortcuts
 
-- `<CR>` jump to the selected anchor
-- `<Esc>` close the picker
-- `<C-n>` / `<C-p>` move selection
-- `<C-d>` delete the selected anchor
-- `<C-j>` / `<C-k>` reorder the selected anchor (persisted)
+| Key              | Action                     |
+| ---------------- | -------------------------- |
+| `<CR>`           | Jump to selected anchor    |
+| `<Esc>`          | Close picker               |
+| `<C-n>` `<Down>` | Move selection down        |
+| `<C-p>` `<Up>`   | Move selection up          |
+| `<C-d>`          | Delete selected anchor     |
+| `<C-j>` / `<C-k>` | Reorder anchor (persisted) |
 
 ## which-key Integration
 
