@@ -1,6 +1,6 @@
 PLENARY_DIR ?= ../plenary.nvim
 
-.PHONY: test lint
+.PHONY: format lint test
 
 test:
 	nvim --headless -u tests/minimal_init.lua \
