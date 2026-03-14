@@ -33,8 +33,9 @@ local function read_from_disk(project_root)
   return data.anchors or {}
 end
 
-function M.load(project_root)
-  if cache[project_root] then
+function M.load(project_root, opts)
+  opts = opts or {}
+  if not opts.force and cache[project_root] then
     return cache[project_root]
   end
 

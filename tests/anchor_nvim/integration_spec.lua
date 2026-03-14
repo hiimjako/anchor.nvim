@@ -204,10 +204,9 @@ describe("core operations", function()
       -- Now mark line 3, but simulate concurrent modification during input
       vim.api.nvim_win_set_cursor(0, { 3, 0 })
       vim.ui.input = function(_, on_confirm)
-        -- While the prompt is "open", another subsystem updates the store
-        -- (e.g. calibration moves the existing anchor from line 1 to line 2)
-        local current = store.load(proj_root)
-        current[1].line = 2
+        -- While the prompt is "open", another subsystem renames the existing anchor
+        local current = store.load(proj_root, { force = true })
+        current[1].name = "renamed-concurrently"
         store.save(proj_root, current)
 
         -- Then the user confirms
@@ -217,10 +216,10 @@ describe("core operations", function()
       api.mark()
       vim.ui.input = original_input
 
-      local anchors = store.load(proj_root)
+      local anchors = store.load(proj_root, { force = true })
       assert.equals(2, #anchors)
-      -- The concurrent line update should NOT be lost
-      assert.equals(2, anchors[1].line)
+      -- The concurrent rename should NOT be lost
+      assert.equals("renamed-concurrently", anchors[1].name)
     end)
 
     it("anchors persist after save and reload", function()

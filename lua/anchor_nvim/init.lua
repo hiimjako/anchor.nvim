@@ -90,13 +90,25 @@ function M.mark()
     end
 
     -- Re-load from disk to avoid overwriting concurrent changes (e.g. calibration)
-    local fresh_anchors = store.load(root)
+    local fresh_anchors = store.load(root, { force = true })
+    local current_existing = nil
+    if existing then
+      for _, bm in ipairs(fresh_anchors) do
+        if bm.id == existing.id then
+          current_existing = bm
+          break
+        end
+      end
+    end
+    if not current_existing then
+      current_existing = find_anchor_at_cursor(fresh_anchors, rel_file, line)
+    end
 
     if name == "" then
       -- Empty name on existing anchor = delete; on new line = no-op
-      if existing then
+      if current_existing then
         for i, bm in ipairs(fresh_anchors) do
-          if bm.id == existing.id then
+          if bm.id == current_existing.id then
             table.remove(fresh_anchors, i)
             break
           end
@@ -107,9 +119,9 @@ function M.mark()
       return
     end
 
-    if existing then
+    if current_existing then
       for _, bm in ipairs(fresh_anchors) do
-        if bm.id == existing.id then
+        if bm.id == current_existing.id then
           bm.name = name
           bm.updated_at = os.time()
           break
