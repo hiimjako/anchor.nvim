@@ -663,6 +663,35 @@ describe("core operations", function()
       local anchors = store.load(root)
       assert.equals(5, anchors[1].line)
     end)
+
+    it("does not mutate cached anchor objects during calibration", function()
+      local sign = require("anchor_nvim.sign")
+      local project = require("anchor_nvim.project")
+      sign.setup()
+
+      local bufpath = vim.api.nvim_buf_get_name(0)
+      local root = project.find_root(vim.fn.fnamemodify(bufpath, ":h"))
+
+      -- Create anchor at line 1 with content "local a = 1"
+      local bm = Anchor.new("drifter", "src/main.lua", 1, 0, "local a = 1")
+      store.save(root, { bm })
+
+      -- Grab cached reference before refresh
+      local cached = store.load(root)
+      assert.equals(1, cached[1].line)
+
+      -- Insert a line at top so content drifts to line 2
+      vim.api.nvim_buf_set_lines(0, 0, 0, false, { "-- new header" })
+
+      sign.refresh()
+
+      -- The original cached reference should NOT have been mutated
+      assert.equals(1, cached[1].line)
+
+      -- The store should have the calibrated line via a fresh copy
+      local updated = store.load(root, { force = true })
+      assert.equals(2, updated[1].line)
+    end)
   end)
 
   describe("quickfix_list", function()

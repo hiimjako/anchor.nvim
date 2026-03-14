@@ -43,7 +43,16 @@ function M.refresh(bufnr)
   local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local dirty = false
 
-  for _, bm in ipairs(anchors) do
+  -- Work on a shallow copy so we never mutate cached objects
+  local working = {}
+  for i, bm in ipairs(anchors) do
+    working[i] = {}
+    for k, v in pairs(bm) do
+      working[i][k] = v
+    end
+  end
+
+  for _, bm in ipairs(working) do
     if bm.file == rel_file then
       -- Calibrate line drift
       local new_line = calibrate.check(bm, buf_lines)
@@ -73,7 +82,7 @@ function M.refresh(bufnr)
   end
 
   if dirty then
-    store.save(root, anchors)
+    store.save(root, working)
   end
 end
 
