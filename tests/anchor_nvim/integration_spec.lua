@@ -785,6 +785,21 @@ describe("core operations", function()
       assert.equals("second", anchors[2].name)
     end)
 
+    it("C-j in global list persists the reorder", function()
+      local api = require("anchor_nvim")
+      add_anchor(api, 1, "first")
+      add_anchor(api, 2, "second")
+      add_anchor(api, 3, "third")
+
+      api.list_all_anchors()
+      feed("<C-j><Esc>")
+
+      local anchors = store.load(proj_root, { force = true })
+      assert.equals("second", anchors[1].name)
+      assert.equals("first", anchors[2].name)
+      assert.equals("third", anchors[3].name)
+    end)
+
     it("reordering does not save internal fields like _abs_path to disk", function()
       local api = require("anchor_nvim")
       add_anchor(api, 1, "first")

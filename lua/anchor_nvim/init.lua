@@ -295,6 +295,22 @@ function M.list_all_anchors()
         store.save(bm._project_root, current)
       end
     end,
+    on_reorder = function(reordered)
+      -- Group by project and save each project's anchors in the new order
+      local by_project = {}
+      for _, bm in ipairs(reordered) do
+        local root = bm._project_root
+        if root then
+          if not by_project[root] then
+            by_project[root] = {}
+          end
+          table.insert(by_project[root], bm)
+        end
+      end
+      for root, project_anchors in pairs(by_project) do
+        store.save(root, project_anchors)
+      end
+    end,
     reload = function()
       local current = store.load_all()
       for _, bm in ipairs(current) do
