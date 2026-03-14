@@ -615,6 +615,29 @@ describe("core operations", function()
       -- Must be back in normal mode
       assert.equals("n", vim.fn.mode())
     end)
+    it("does not leak internal fields into the store cache", function()
+      local api = require("anchor_nvim")
+
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
+      local original_input = vim.ui.input
+      vim.ui.input = function(_, on_confirm)
+        on_confirm("test")
+      end
+      api.mark()
+      vim.ui.input = original_input
+
+      -- Verify cache is clean before listing
+      local before = store.load(proj_root)
+      assert.is_nil(before[1]._abs_path)
+
+      -- list_anchors should not pollute cached objects
+      api.list_anchors()
+      local keys = vim.api.nvim_replace_termcodes("i<Esc>", true, false, true)
+      vim.api.nvim_feedkeys(keys, "x", false)
+
+      local after = store.load(proj_root)
+      assert.is_nil(after[1]._abs_path)
+    end)
   end)
 
   describe("sign refresh", function()

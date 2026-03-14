@@ -233,9 +233,15 @@ function M.list_anchors()
   local picker = require("anchor_nvim.picker")
 
   local root = get_project_root()
-  local anchors = store.load(root)
-  for _, bm in ipairs(anchors) do
-    bm._abs_path = root .. "/" .. bm.file
+  local raw = store.load(root)
+  local anchors = {}
+  for _, bm in ipairs(raw) do
+    local copy = {}
+    for k, v in pairs(bm) do
+      copy[k] = v
+    end
+    copy._abs_path = root .. "/" .. bm.file
+    table.insert(anchors, copy)
   end
 
   picker.pick(anchors, {
